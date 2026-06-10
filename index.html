@@ -234,6 +234,8 @@ window.addEventListener("load",function(){
   .usage-tbl th{color:var(--muted);font-weight:650;font-size:12px}
   .usage-tbl tr:last-child td{border-bottom:none}
   .usage-n{font-size:11px;color:var(--muted)}
+  /* ===== v54: Artefakt-only-Funktionen in der Web-App ausblenden (body.no-cw wird gesetzt, wenn window.cowork fehlt) ===== */
+  body.no-cw .cw-only{display:none !important}
   /* ===== v53 PWA: Mobile-Ansicht (greift NUR unter 700px Breite – Mac/Artefakt bleiben unverändert) ===== */
   @media (max-width:700px){
     body{font-size:17px}
@@ -277,7 +279,7 @@ window.addEventListener("load",function(){
     <h1>🌍 Reise-Englisch</h1>
     <span class="badge" id="levelBadge">Level A0</span>
     <span class="badge" id="testBadge" title="Geprüftes CEFR-Niveau aus dem Einstufungstest" style="display:none;background:var(--accent-soft);color:var(--accent-ink)"></span>
-    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 10.06. · v53</span>
+    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 10.06. · v54</span>
     <button class="iconbtn" id="themeBtn" style="font-size:12px;padding:5px 10px;margin-left:4px" title="Erscheinungsbild: Automatisch (folgt dem System), Dunkel oder Hell">🌓 Auto</button>
     <p class="sub" id="subline">Dein persönliches Lernkarten-System</p>
   </header>
@@ -290,8 +292,8 @@ window.addEventListener("load",function(){
     <button data-tab="write">✍️ Schreiben</button>
     <button data-tab="listen">🎧 Hören</button>
     <button data-tab="test">📈 Test</button>
-    <button data-tab="chat">💬 Chat</button>
-    <button data-tab="adventure">🌍 Immersion</button>
+    <button data-tab="chat" class="cw-only">💬 Chat</button>
+    <button data-tab="adventure" class="cw-only">🌍 Immersion</button>
     <button data-tab="mastered">🏆 Gemeistert</button>
     <button data-tab="manage">⚙️ Verwalten</button>
   </nav>
@@ -430,10 +432,10 @@ window.addEventListener("load",function(){
     </div>
     <div class="split" style="margin-bottom:14px">
       <div class="card pad"><h3 class="sec">Vokabeln nach Status</h3><div class="chart-box"><canvas id="cStatus"></canvas></div></div>
-      <div class="card pad"><h3 class="sec">Gemeisterte Vokabeln nach Thema</h3><div class="chart-box"><canvas id="cCat"></canvas></div><div class="row" style="justify-content:space-between;align-items:center;gap:8px;margin-top:8px"><span class="muted" id="topicSortInfo" style="font-size:12px"></span><button class="btn ghost" id="btnTopicSort" type="button" onclick="sortTopicsAI()" style="font-size:13px;padding:6px 10px;white-space:nowrap">🗂️ Themen sortieren</button></div></div>
+      <div class="card pad"><h3 class="sec">Gemeisterte Vokabeln nach Thema</h3><div class="chart-box"><canvas id="cCat"></canvas></div><div class="row cw-only" style="justify-content:space-between;align-items:center;gap:8px;margin-top:8px"><span class="muted" id="topicSortInfo" style="font-size:12px"></span><button class="btn ghost" id="btnTopicSort" type="button" onclick="sortTopicsAI()" style="font-size:13px;padding:6px 10px;white-space:nowrap">🗂️ Themen sortieren</button></div></div>
     </div>
     <div class="card pad" style="margin-bottom:14px"><h3 class="sec">Lernverlauf (je Tag, letzte 14 Tage)</h3><div class="chart-box"><canvas id="cHist"></canvas></div></div>
-    <div class="card pad" id="convCard" style="margin-bottom:14px">
+    <div class="card pad cw-only" id="convCard" style="margin-bottom:14px">
       <div class="row" style="justify-content:space-between;align-items:baseline">
         <h3 class="sec" style="margin:0">📈 Gesprächs-Niveau (deine Antworten)</h3>
         <span class="badge" id="convLast"></span>
@@ -465,9 +467,9 @@ window.addEventListener("load",function(){
       <p class="muted" style="font-size:12px;margin:6px 0 10px">Wähle ein beliebiges Transkript und übe gezielt seine Wörter – als Multiple Choice, Karteikarten oder Hörübung (ganze Sätze / einzelne Vokabeln). Die eigenen Wörter des Textes kommen zuerst; mit „🔤 nur unbekannte Wörter" (in der Übung) blendest du den Grundwortschatz aus. „✚ Wörter" ergänzt fehlende Vokabeln des Textes.</p>
       <div id="transcriptsBody"></div>
       <div id="migrateStatus" class="muted" style="font-size:12px;margin-top:8px"></div>
-      <div class="row" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><button class="btn" id="btnNewScript">📄 Neues Script laden</button></div>
-      <div id="scriptStatus" class="muted" style="font-size:13px;margin-top:10px"></div>
-      <p class="muted" style="font-size:12px;margin:8px 0 0">„📄 Neues Script laden" holt das nächste noch nicht verarbeitete Transkript aus Obsidian (<code>Reise-Englisch/_Transkripte</code>) und legt seine Vokabeln an. Mit „✚ Wörter" an einem Transkript oben ergänzt du fehlende Vokabeln dieses Textes. Ob Transkript-Wörter mitgeübt werden, schaltest du in der Übungs-Ansicht (Häkchen „📝 Transkript-Vokabeln verwenden").</p>
+      <div class="row cw-only" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><button class="btn" id="btnNewScript">📄 Neues Script laden</button></div>
+      <div id="scriptStatus" class="muted cw-only" style="font-size:13px;margin-top:10px"></div>
+      <p class="muted cw-only" style="font-size:12px;margin:8px 0 0">„📄 Neues Script laden" holt das nächste noch nicht verarbeitete Transkript aus Obsidian (<code>Reise-Englisch/_Transkripte</code>) und legt seine Vokabeln an. Mit „✚ Wörter" an einem Transkript oben ergänzt du fehlende Vokabeln dieses Textes. Ob Transkript-Wörter mitgeübt werden, schaltest du in der Übungs-Ansicht (Häkchen „📝 Transkript-Vokabeln verwenden").</p>
     </div>
     <div class="card pad">
       <h3 class="sec">🔤 Grammatik (level-angepasst)</h3>
@@ -585,7 +587,7 @@ window.addEventListener("load",function(){
       <p class="muted" style="font-size:13px;margin:10px 0 0">Beispielkarten sind nur zum Ausprobieren da. Deine echten Vokabeln kommen aus deinen YouTube-Videos.</p>
     </div>
 
-    <div class="card pad" style="margin-bottom:14px">
+    <div class="card pad cw-only" style="margin-bottom:14px">
       <h3 class="sec">☁️ Sicherung in Obsidian</h3>
       <p class="muted" style="font-size:13px;margin-top:0">Dein kompletter Lernstand (Vokabeln + FSRS-Fortschritt + Statistik) wird als wiederherstellbare Datei in <code>Reise-Englisch/_Backups</code> gespeichert – einmal täglich automatisch und jederzeit per Knopf.</p>
       <div class="row">
@@ -2518,6 +2520,7 @@ function renderUsage(){
 }
 
 function activate(tab){
+  if(!cwReady()&&(tab==="chat"||tab==="adventure"))tab="dashboard"; // v54: KI-Tabs sind in der Web-App ausgeblendet (auch nicht per Tastatur erreichbar)
   usageTick(); // Zeit bis hierher gehört noch zum alten Tab
   if(tab!==curTab){curTab=tab;usageOpen(usageModeKey());}
   tabs.forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
@@ -4802,7 +4805,10 @@ const _tb=byId("themeBtn");if(_tb)_tb.addEventListener("click",()=>{
 });
 applyTheme();
 ensureProgress();buildFilterBar();syncLevel(false);migrateTests();renderDashboard();
-if(!cwReady())scriptMsg("ℹ️ Tipp: Öffne dieses Artefakt in der Cowork-Seitenleiste, dann kannst du Transkripte automatisch laden.");
+if(!cwReady()){
+  document.body.classList.add("no-cw"); // v54: Artefakt-only-Elemente ausblenden (Chat/Immersion-Tabs, Script-Loader, Obsidian-Karte, KI-Knöpfe)
+  if(location.protocol!=="https:")scriptMsg("ℹ️ Tipp: Öffne dieses Artefakt in der Cowork-Seitenleiste, dann kannst du Transkripte automatisch laden."); // Hinweis nur in der Datei-Kopie, nicht in der Web-App
+}
 if(cwReady()&&ui.lastBackup!==todayStr())doBackup(true);
 
 /* ===== v53: SENT_SEED – eingebackene Diktat-/Hörsätze (aus Beispielsätzen; nur Fallback ohne KI) ===== */
