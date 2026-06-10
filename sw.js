@@ -4,7 +4,7 @@
    - Navigation/HTML: network-first (Updates kommen sofort an), Cache als Offline-Fallback.
    - Übrige Dateien (Icons, Chart.js-CDN): cache-first mit Nachladen im Hintergrund.
    Bei jedem Release CACHE_VERSION hochzählen (macht alte Caches frei). */
-const CACHE_VERSION = "re-pwa-v1";
+const CACHE_VERSION = "re-pwa-v2";
 const PRECACHE = [
   "./",
   "./index.html",
