@@ -5171,6 +5171,7 @@ function renderLangSwitch(){
 relabelStatic();renderLangSwitch();
 if(CUR_LANG!=="en"){
   document.querySelectorAll('.tabs [data-tab="test"],.tabs [data-tab="adventure"]').forEach(b=>{b.style.display="none";});
+  const _tc=byId("testCard");if(_tc)_tc.style.display="none"; // Einstufungstest-Dashboard-Karte ist EN-only
   [["btnGrammar",GRAMMAR_DECK],["btnChunks",CHUNK_DECK],["btnLoadLevel",LEVEL_DECK]].forEach(pair=>{
     if(!pair[1].length){const b=byId(pair[0]);if(b){const card=b.closest(".card");if(card)card.style.display="none";}}
   });
