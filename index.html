@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Reise-Englisch · Lernkarten</title>
+<title>Reise-Sprachen · Lernkarten</title>
 <!-- ===== PWA (v53): Manifest + iOS-Homescreen + Service-Worker-Registrierung (nur https, nicht im Artefakt) ===== -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -300,10 +300,11 @@ window.addEventListener("load",function(){
 <body>
 <div class="wrap">
   <header class="top">
-    <h1>🌍 Reise-Englisch</h1>
+    <h1>🌍 Reise-Sprachen</h1>
+    <span id="langSwitch" style="display:inline-flex;gap:4px;align-self:center;margin-left:2px"></span>
     <span class="badge" id="levelBadge">Level A0</span>
     <span class="badge" id="testBadge" title="Geprüftes CEFR-Niveau aus dem Einstufungstest" style="display:none;background:var(--accent-soft);color:var(--accent-ink)"></span>
-    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 10.06. · v55</span>
+    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 10.06. · v56</span>
     <button class="iconbtn" id="themeBtn" style="font-size:12px;padding:5px 10px;margin-left:4px" title="Erscheinungsbild: Automatisch (folgt dem System), Dunkel oder Hell">🌓 Auto</button>
     <p class="sub" id="subline">Dein persönliches Lernkarten-System</p>
   </header>
@@ -2048,12 +2049,135 @@ to discern|erkennen / wahrnehmen|tu di-SSÖRN|I can discern a pattern.|Ich kann 
 to deem|erachten / halten für|tu diim|It was deemed necessary.|Es wurde für notwendig erachtet.
 `;
 
-const CORE_DECK=deckLines(CORE_TXT).map(function(l,i){var f=l.split("|");return {id:"core-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",rank:i+1,cat:"Grundwortschatz",core:true,example:false};});
-const GRAMMAR_DECK=deckLines(GRAMMAR_TXT).map(function(l,i){var f=l.split("|");return {id:"gr-"+String(i+1).padStart(3,"0"),lvlMin:+f[0],cat:f[1],en:f[2],de:f[3],pron:f[4]||"",ex_en:f[5]||"",ex_de:f[6]||"",rank:i+1,type:"grammatik",core:false,example:false};});
-const CHUNK_DECK=deckLines(CHUNK_TXT).map(function(l,i){var f=l.split("|");return {id:"chk-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",cat:f[5]||"Sonstiges",rank:i+1,chunk:true,core:false,example:false};});
+/* ===== v56: Mehrsprachigkeit – Sprachregistry, Key-Namespacing, Italienisch ===== */
+const LANGS={
+ en:{code:"en",name:"Englisch",adj:"englischen",adjE:"englische",adjR:"englischer",flag:"\u{1F1EC}\u{1F1E7}",tts:"en-US",artHint:"the/a/an",obsRoot:"Reise-Englisch",syncFile:"lernstand.json",plan:{start:"2026-06-02",days:365,goal:2750,goalLevel:"B1",stretchGoal:3250,stretchLevel:"B2"}},
+ it:{code:"it",name:"Italienisch",adj:"italienischen",adjE:"italienische",adjR:"italienischer",flag:"\u{1F1EE}\u{1F1F9}",tts:"it-IT",artHint:"il/lo/la/un/una",obsRoot:"Reise-Italienisch",syncFile:"lernstand-it.json",plan:null}
+};
+let CUR_LANG="en";try{const _rl=localStorage.getItem("rs_lang");if(LANGS[_rl])CUR_LANG=_rl;}catch(e){}
+const LNG=LANGS[CUR_LANG];
+/* nsKey: pro Sprache eigener localStorage-Namensraum. EN bleibt 1:1 bei re_v1_* (KEINE Migration noetig);
+   andere Sprachen bekommen <code>_v1_*. re_v1_sync (Token/GistId) ist absichtlich GLOBAL (ein Gist, ein Token). */
+function nsKey(k){return (CUR_LANG==="en"||k==="re_v1_sync")?k:String(k).replace(/^re_v1_/,CUR_LANG+"_v1_");}
+function setAppLang(c){if(c===CUR_LANG||!LANGS[c])return;try{localStorage.setItem("rs_lang",c);}catch(e){}location.reload();}
+/* Italienischer Reise-Grundwortschatz (110 Karten, deutsche Lautschrift, Betonung GROSS) */
+const IT_CORE_TXT=`ciao|hallo / tschüss|TSCHAU|Ciao, come stai?|Hallo, wie geht es dir?|Smalltalk
+buongiorno|guten Morgen / guten Tag|bu-on-DSCHOR-no|Buongiorno, signora!|Guten Tag, meine Dame!|Smalltalk
+buonasera|guten Abend|bu-o-na-SE-ra|Buonasera a tutti.|Guten Abend zusammen.|Smalltalk
+buonanotte|gute Nacht|bu-o-na-NOT-te|Buonanotte, a domani.|Gute Nacht, bis morgen.|Smalltalk
+arrivederci|auf Wiedersehen|ar-ri-we-DER-tschi|Arrivederci e grazie!|Auf Wiedersehen und danke!|Smalltalk
+per favore|bitte (Bitte um etwas)|per fa-WO-re|Un caffè, per favore.|Einen Kaffee, bitte.|Smalltalk
+grazie|danke|GRAT-sje|Grazie mille!|Vielen Dank!|Smalltalk
+prego|bitte (gern geschehen)|PRE-go|Grazie! – Prego!|Danke! – Bitte!|Smalltalk
+scusi|Entschuldigung (förmlich)|SKU-si|Scusi, dov'è il bagno?|Entschuldigung, wo ist die Toilette?|Smalltalk
+mi dispiace|es tut mir leid|mi dis-PJA-tsche|Mi dispiace, non lo so.|Es tut mir leid, ich weiß es nicht.|Smalltalk
+sì|ja|ßi|Sì, certo.|Ja, sicher.|Smalltalk
+no|nein|no|No, grazie.|Nein, danke.|Smalltalk
+non capisco|ich verstehe nicht|non ka-PIS-ko|Non capisco, può ripetere?|Ich verstehe nicht, können Sie das wiederholen?|Smalltalk
+Parla tedesco?|Sprechen Sie Deutsch?|PAR-la te-DES-ko|Scusi, parla tedesco?|Entschuldigung, sprechen Sie Deutsch?|Smalltalk
+Parla inglese?|Sprechen Sie Englisch?|PAR-la in-GLE-se|Parla inglese, per favore?|Sprechen Sie bitte Englisch?|Smalltalk
+Come stai?|Wie geht es dir?|KO-me STAI|Ciao Marco, come stai?|Hallo Marco, wie geht es dir?|Smalltalk
+bene|gut|BE-ne|Sto bene, grazie.|Mir geht es gut, danke.|Smalltalk
+Mi chiamo …|ich heiße …|mi KJA-mo|Mi chiamo Karsten.|Ich heiße Karsten.|Smalltalk
+Piacere!|Freut mich!|pja-TSCHE-re|Piacere, sono Karsten.|Freut mich, ich bin Karsten.|Smalltalk
+parlare|sprechen|par-LA-re|Parlo un po' di italiano.|Ich spreche ein bisschen Italienisch.|Smalltalk
+capire|verstehen|ka-PI-re|Adesso capisco!|Jetzt verstehe ich!|Smalltalk
+essere|sein|ES-se-re|Sono tedesco.|Ich bin Deutscher.|Smalltalk
+avere|haben|a-WE-re|Ho una domanda.|Ich habe eine Frage.|Smalltalk
+venire|kommen|we-NI-re|Vengo dalla Germania.|Ich komme aus Deutschland.|Smalltalk
+la Germania|Deutschland|la dscher-MA-nja|Vengo dalla Germania.|Ich komme aus Deutschland.|Smalltalk
+l'Italia|Italien|li-TA-lja|Amo l'Italia!|Ich liebe Italien!|Smalltalk
+bello|schön|BEL-lo|Che bello!|Wie schön!|Smalltalk
+molto|sehr / viel|MOL-to|Molto bene!|Sehr gut!|Smalltalk
+Quanto costa?|Wie viel kostet das?|KWAN-to KOS-ta|Quanto costa questo?|Wie viel kostet das hier?|Einkaufen
+il conto|die Rechnung|il KON-to|Il conto, per favore.|Die Rechnung, bitte.|Restaurant & Essen
+il caffè|der Kaffee|il kaf-FÄ|Un caffè e un cornetto, per favore.|Einen Kaffee und ein Hörnchen, bitte.|Restaurant & Essen
+l'acqua|das Wasser|LAK-wa|Una bottiglia d'acqua, per favore.|Eine Flasche Wasser, bitte.|Restaurant & Essen
+il vino|der Wein|il WI-no|Un bicchiere di vino rosso.|Ein Glas Rotwein.|Restaurant & Essen
+la birra|das Bier|la BIR-ra|Una birra piccola, per favore.|Ein kleines Bier, bitte.|Restaurant & Essen
+il pane|das Brot|il PA-ne|Il pane è fresco.|Das Brot ist frisch.|Restaurant & Essen
+la pizza|die Pizza|la PIT-sa|Una pizza margherita, per favore.|Eine Pizza Margherita, bitte.|Restaurant & Essen
+il menù|die Speisekarte|il me-NU|Il menù, per favore.|Die Speisekarte, bitte.|Restaurant & Essen
+la colazione|das Frühstück|la ko-lat-SJO-ne|La colazione è inclusa?|Ist das Frühstück inbegriffen?|Hotel
+il pranzo|das Mittagessen|il PRAN-dso|Pranzo alle dodici.|Mittagessen um zwölf.|Restaurant & Essen
+la cena|das Abendessen|la TSCHE-na|La cena è alle otto.|Das Abendessen ist um acht.|Restaurant & Essen
+mangiare|essen|man-DSCHA-re|Vorrei mangiare qualcosa.|Ich möchte etwas essen.|Restaurant & Essen
+bere|trinken|BE-re|Cosa vuoi bere?|Was möchtest du trinken?|Restaurant & Essen
+Vorrei …|ich möchte …|wor-RÄI|Vorrei un gelato.|Ich möchte ein Eis.|Restaurant & Essen
+il gelato|das Eis|il dsche-LA-to|Il gelato italiano è buonissimo.|Das italienische Eis ist sehr lecker.|Restaurant & Essen
+buono|gut / lecker|BWO-no|Questo è molto buono!|Das ist sehr lecker!|Restaurant & Essen
+il cameriere|der Kellner|il ka-me-RJE-re|Il cameriere è gentile.|Der Kellner ist freundlich.|Restaurant & Essen
+prenotare|reservieren|pre-no-TA-re|Vorrei prenotare un tavolo.|Ich möchte einen Tisch reservieren.|Restaurant & Essen
+il tavolo|der Tisch|il TA-wo-lo|Un tavolo per due, per favore.|Einen Tisch für zwei, bitte.|Restaurant & Essen
+l'albergo|das Hotel|lal-BER-go|L'albergo è in centro.|Das Hotel ist im Zentrum.|Hotel
+la camera|das Zimmer|la KA-me-ra|Una camera doppia, per favore.|Ein Doppelzimmer, bitte.|Hotel
+la chiave|der Schlüssel|la KJA-we|Ecco la chiave della camera.|Hier ist der Zimmerschlüssel.|Hotel
+la prenotazione|die Reservierung|la pre-no-tat-SJO-ne|Ho una prenotazione.|Ich habe eine Reservierung.|Hotel
+il bagno|das Bad / die Toilette|il BAN-jo|Dov'è il bagno?|Wo ist die Toilette?|Hotel
+Dov'è …?|Wo ist …?|do-WÄ|Dov'è la stazione?|Wo ist der Bahnhof?|Reisen
+la stazione|der Bahnhof|la stat-SJO-ne|La stazione è vicina.|Der Bahnhof ist in der Nähe.|Auto & Verkehr
+l'aeroporto|der Flughafen|la-e-ro-POR-to|L'aeroporto è lontano?|Ist der Flughafen weit weg?|Flughafen & Flug
+il treno|der Zug|il TRE-no|Il treno parte alle nove.|Der Zug fährt um neun ab.|Auto & Verkehr
+l'autobus|der Bus|LAU-to-bus|Prendo l'autobus numero cinque.|Ich nehme den Bus Nummer fünf.|Auto & Verkehr
+il biglietto|die Fahrkarte / das Ticket|il bi-LJET-to|Un biglietto per Roma, per favore.|Eine Fahrkarte nach Rom, bitte.|Auto & Verkehr
+il volo|der Flug|il WO-lo|Il volo è in ritardo.|Der Flug hat Verspätung.|Flughafen & Flug
+la valigia|der Koffer|la wa-LI-dscha|La mia valigia è pesante.|Mein Koffer ist schwer.|Reisen
+il passaporto|der Reisepass|il pas-sa-POR-to|Ecco il mio passaporto.|Hier ist mein Reisepass.|Reisen
+a destra|rechts|a DES-tra|Giri a destra.|Biegen Sie rechts ab.|Reisen
+a sinistra|links|a si-NIS-tra|Il bar è a sinistra.|Die Bar ist links.|Reisen
+dritto|geradeaus|DRIT-to|Vada sempre dritto.|Gehen Sie immer geradeaus.|Reisen
+vicino|nah / in der Nähe|wi-TSCHI-no|C'è una farmacia qui vicino?|Gibt es hier in der Nähe eine Apotheke?|Reisen
+lontano|weit (entfernt)|lon-TA-no|Non è lontano.|Es ist nicht weit.|Reisen
+la strada|die Straße|la STRA-da|Che strada devo prendere?|Welche Straße muss ich nehmen?|Auto & Verkehr
+la piazza|der Platz|la PJAT-sa|Ci vediamo in piazza.|Wir sehen uns auf dem Platz.|Reisen
+il centro|das Zentrum / die Innenstadt|il TSCHEN-tro|Andiamo in centro.|Wir gehen in die Innenstadt.|Reisen
+la spiaggia|der Strand|la SPJAD-dscha|Oggi andiamo in spiaggia.|Heute gehen wir an den Strand.|Reisen
+il mare|das Meer|il MA-re|Il mare è bellissimo.|Das Meer ist wunderschön.|Reisen
+andare|gehen / fahren|an-DA-re|Andiamo!|Los geht es!|Reisen
+Quanto tempo ci vuole?|Wie lange dauert es?|KWAN-to TEM-po tschi WUO-le|Quanto tempo ci vuole a piedi?|Wie lange dauert es zu Fuß?|Reisen
+la settimana|die Woche|la set-ti-MA-na|Resto una settimana.|Ich bleibe eine Woche.|Reisen
+aperto|geöffnet|a-PER-to|Il museo è aperto oggi?|Ist das Museum heute geöffnet?|Einkaufen
+chiuso|geschlossen|KJU-so|Il negozio è chiuso.|Das Geschäft ist geschlossen.|Einkaufen
+il negozio|das Geschäft|il ne-GOT-sjo|Il negozio apre alle dieci.|Das Geschäft öffnet um zehn.|Einkaufen
+il supermercato|der Supermarkt|il su-per-mer-KA-to|Vado al supermercato.|Ich gehe in den Supermarkt.|Einkaufen
+pagare|bezahlen|pa-GA-re|Posso pagare con la carta?|Kann ich mit Karte zahlen?|Einkaufen
+la carta|die Karte (Bank-/Kreditkarte)|la KAR-ta|Pago con la carta.|Ich zahle mit Karte.|Einkaufen
+i contanti|das Bargeld|i kon-TAN-ti|Solo contanti, mi dispiace.|Nur Bargeld, tut mir leid.|Einkaufen
+caro|teuer|KA-ro|È troppo caro.|Das ist zu teuer.|Einkaufen
+economico|günstig / billig|e-ko-NO-mi-ko|Cerco un albergo economico.|Ich suche ein günstiges Hotel.|Einkaufen
+aiuto|Hilfe|a-JU-to|Aiuto, per favore!|Hilfe, bitte!|Gesundheit
+Può aiutarmi?|Können Sie mir helfen?|pwo a-ju-TAR-mi|Scusi, può aiutarmi?|Entschuldigung, können Sie mir helfen?|Gesundheit
+la farmacia|die Apotheke|la far-ma-TSCHI-a|La farmacia è aperta?|Hat die Apotheke geöffnet?|Gesundheit
+il medico|der Arzt|il ME-di-ko|Ho bisogno di un medico.|Ich brauche einen Arzt.|Gesundheit
+l'ospedale|das Krankenhaus|los-pe-DA-le|Dov'è l'ospedale?|Wo ist das Krankenhaus?|Gesundheit
+malato|krank|ma-LA-to|Mi sento malato.|Ich fühle mich krank.|Gesundheit
+il dolore|der Schmerz|il do-LO-re|Ho un dolore qui.|Ich habe hier Schmerzen.|Gesundheit
+oggi|heute|OD-dschi|Oggi fa caldo.|Heute ist es warm.|Alltag & Zuhause
+domani|morgen|do-MA-ni|A domani!|Bis morgen!|Alltag & Zuhause
+ieri|gestern|JE-ri|Ieri ho visitato Roma.|Gestern habe ich Rom besichtigt.|Alltag & Zuhause
+adesso|jetzt|a-DES-so|Adesso mangiamo.|Jetzt essen wir.|Alltag & Zuhause
+Che ora è?|Wie spät ist es?|ke O-ra Ä|Scusi, che ora è?|Entschuldigung, wie spät ist es?|Alltag & Zuhause
+il giorno|der Tag|il DSCHOR-no|Buona giornata!|Schönen Tag noch!|Alltag & Zuhause
+uno|eins|U-no|Un momento, per favore.|Einen Moment, bitte.|Alltag & Zuhause
+due|zwei|DU-e|Due biglietti, per favore.|Zwei Fahrkarten, bitte.|Alltag & Zuhause
+tre|drei|TRE|Tre euro, per favore.|Drei Euro, bitte.|Alltag & Zuhause
+quattro|vier|KWAT-tro|Siamo in quattro.|Wir sind zu viert.|Alltag & Zuhause
+cinque|fünf|TSCHIN-kwe|Cinque minuti, per favore.|Fünf Minuten, bitte.|Alltag & Zuhause
+sei|sechs|SÄI|Il treno parte alle sei.|Der Zug fährt um sechs.|Alltag & Zuhause
+sette|sieben|SET-te|La colazione è alle sette.|Das Frühstück ist um sieben.|Alltag & Zuhause
+otto|acht|OT-to|Ci vediamo alle otto.|Wir sehen uns um acht.|Alltag & Zuhause
+nove|neun|NO-we|Sono le nove.|Es ist neun Uhr.|Alltag & Zuhause
+dieci|zehn|DJE-tschi|Dieci euro, per favore.|Zehn Euro, bitte.|Alltag & Zuhause
+cento|hundert|TSCHEN-to|Costa cento euro.|Es kostet hundert Euro.|Alltag & Zuhause
+piccolo|klein|PIK-ko-lo|Un caffè piccolo, per favore.|Einen kleinen Kaffee, bitte.|Alltag & Zuhause
+grande|groß|GRAN-de|Una pizza grande, per favore.|Eine große Pizza, bitte.|Alltag & Zuhause`;
+const IT_CORE_DECK=deckLines(IT_CORE_TXT).map(function(l,i){var f=l.split("|");return {id:"itc-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",cat:f[5]||"Grundwortschatz",rank:i+1,core:true,example:false};});
+const CORE_DECK=CUR_LANG!=="en"?IT_CORE_DECK:deckLines(CORE_TXT).map(function(l,i){var f=l.split("|");return {id:"core-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",rank:i+1,cat:"Grundwortschatz",core:true,example:false};});
+const GRAMMAR_DECK=CUR_LANG!=="en"?[]:deckLines(GRAMMAR_TXT).map(function(l,i){var f=l.split("|");return {id:"gr-"+String(i+1).padStart(3,"0"),lvlMin:+f[0],cat:f[1],en:f[2],de:f[3],pron:f[4]||"",ex_en:f[5]||"",ex_de:f[6]||"",rank:i+1,type:"grammatik",core:false,example:false};});
+const CHUNK_DECK=CUR_LANG!=="en"?[]:deckLines(CHUNK_TXT).map(function(l,i){var f=l.split("|");return {id:"chk-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",cat:f[5]||"Sonstiges",rank:i+1,chunk:true,core:false,example:false};});
 const LEVEL_DECK=[];
 function _addLevel(cefr,cat,t){deckLines(t).forEach(function(l,i){var f=l.split("|");LEVEL_DECK.push({id:"lv-"+cefr.toLowerCase()+"-"+String(i+1).padStart(3,"0"),cefr:cefr,cat:cat,core:true,example:false,rank:i+1,en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||""});});}
-["A1","A2","B1","B2","C1","C2"].forEach(function(cf){_addLevel(cf,"Wortschatz "+cf,LEVEL_TXT[cf]);});
+if(CUR_LANG==="en")["A1","A2","B1","B2","C1","C2"].forEach(function(cf){_addLevel(cf,"Wortschatz "+cf,LEVEL_TXT[cf]);});
 /* LEVEL_DECK_FILL */
 
 /* ============================ Storage ============================ */
@@ -2074,8 +2198,8 @@ const FSRS={
 };
 const ROUND_LIMIT = 10;
 const BATCH = 20;
-const load = (k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}};
-const save = (k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));try{if(typeof isSyncKey==="function"&&isSyncKey(k))syncTouch();}catch(_s){}}catch(e){try{const q=e&&(e.name==="QuotaExceededError"||e.code===22);toast(q?"⚠️ Speicher voll! Bitte unter „Verwalten“ in Obsidian sichern.":"⚠️ Speichern fehlgeschlagen.");}catch(_){}}};
+const load = (k,d)=>{try{const v=localStorage.getItem(nsKey(k));return v?JSON.parse(v):d;}catch(e){return d;}};
+const save = (k,v)=>{try{localStorage.setItem(nsKey(k),JSON.stringify(v));try{if(typeof isSyncKey==="function"&&isSyncKey(k))syncTouch();}catch(_s){}}catch(e){try{const q=e&&(e.name==="QuotaExceededError"||e.code===22);toast(q?"⚠️ Speicher voll! Bitte unter „Verwalten“ in Obsidian sichern.":"⚠️ Speichern fehlgeschlagen.");}catch(_){}}};
 function ymd(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 const todayStr = ()=> ymd(new Date());                       // LOKALES Datum (nicht UTC) – sonst rutschen nächtliche Übungen + Streak auf den Nachbartag
 function addDays(ds,n){const d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return ymd(d);}
@@ -2108,7 +2232,7 @@ const STUDY_CAP_MS=120000;    // max. 2 min pro Karte zählen (gegen Pausen/Wegk
 /* ============================ Level ============================ */
 // Level-Schwellen = gemeisterte Wörter, kalibriert nach Meara & Milton (2003) X_Lex / CEFR (rezeptiver Wortschatz, häufigste 5000 Lemmas). A0 = untere Hälfte des A1-Bandes (<750). Quelle: Milton, EuroSLA Monographs 1, S. 224 (Tab. 5).
 const LEVELS=[{code:"A0",min:0},{code:"A1",min:750},{code:"A2",min:1500},{code:"B1",min:2750},{code:"B2",min:3250},{code:"C1",min:3750},{code:"C2",min:4500}];
-const PLAN={start:"2026-06-02",days:365,goal:2750,goalLevel:"B1",stretchGoal:3250,stretchLevel:"B2"}; // Korridor: B1 (2750) → B2 (3250) nach Milton/Meara-Schwellen, in 12 Monaten
+const PLAN=LNG.plan; // v56: pro Sprache (EN: B1->B2-Korridor, s. LANGS; IT: ohne Plan/entspannt) // Korridor: B1 (2750) → B2 (3250) nach Milton/Meara-Schwellen, in 12 Monaten
 const NEW_CAP=6;             // max. neue Vokabeln pro Runde (Rest = Wiederholungen)
 const MASTER_HITS=7;         // gemeistert = so oft richtig beantwortet (globale Regel, Wunsch Karsten 07.06.2026: 7×)
 const MASTER_S=15;           // … UND FSRS-Stabilität >= 15 Tage (v43: Langzeit-Anker, sonst zählt Kurzzeit-Pauken als gemeistert)
@@ -2124,9 +2248,9 @@ const CHALLENGE_LEVELS=["A2","B1","B2","C1","C2"];
 function inputLevel(){return ui.challengeLevel||"B2";}
 function challengeSelectHTML(id){return '<label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;color:var(--muted);cursor:pointer">🔥 Fordere mich auf <select id="'+id+'" class="challSel" style="min-width:auto;width:auto;padding:4px 8px">'+CHALLENGE_LEVELS.map(function(l){return '<option value="'+l+'"'+(inputLevel()===l?" selected":"")+'>'+l+'</option>';}).join("")+'</select></label>';}
 function bindChallengeSelect(id){const s=byId(id);if(!s)return;s.addEventListener("change",function(e){ui.challengeLevel=e.target.value;save(K.ui,ui);toast("🔥 Challenge-Niveau: "+ui.challengeLevel);document.querySelectorAll(".challSel").forEach(function(o){o.value=ui.challengeLevel;});});}
-function planElapsed(){return Math.max(0,Math.min(PLAN.days,daysBetween(PLAN.start,todayStr())));}
-function planExpected(){return PLAN.goal*planElapsed()/PLAN.days;}
-function planNeededPerDay(){const left=Math.max(1,PLAN.days-planElapsed());return Math.max(0,(PLAN.goal-masteredCount())/left);}
+function planElapsed(){if(!PLAN)return 0;return Math.max(0,Math.min(PLAN.days,daysBetween(PLAN.start,todayStr())));}
+function planExpected(){if(!PLAN)return 0;return PLAN.goal*planElapsed()/PLAN.days;}
+function planNeededPerDay(){if(!PLAN)return 0;const left=Math.max(1,PLAN.days-planElapsed());return Math.max(0,(PLAN.goal-masteredCount())/left);}
 function planStatus(){
   const m=masteredCount(),e=planExpected(),el=planElapsed();
   if(el<7)return {label:"🌱 Frisch gestartet",color:"var(--accent)"};
@@ -2143,7 +2267,7 @@ function updateLevelUI(){
   if(s)s.textContent = nx? ("Gemeistert: "+m+" Vokabeln · noch "+(nx.min-m)+" bis "+nx.code+" 🚀")
                          : ("Gemeistert: "+m+" Vokabeln · Top-Level erreicht! 🏆");
 }
-function renderPlan(){
+function renderPlan(){const _gc=byId("goalCard");if(!PLAN){if(_gc)_gc.style.display="none";return;}
   const m=masteredCount(),exp=planExpected(),el=planElapsed(),st=planStatus();
   const fillPct=Math.min(100,PLAN.goal?m/PLAN.goal*100:0),markPct=Math.min(100,PLAN.goal?exp/PLAN.goal*100:0);
   const f=byId("goalFill");if(f){f.style.width=fillPct+"%";f.style.background=st.color;}
@@ -2252,7 +2376,7 @@ function startActive(){
   boost=null;ui.srcFilter=null;save(K.ui,ui);
   activeRun=true;
   activate("write");
-  toast("🗣️ Aktiv-Training: Deutsch sehen, Englisch schreiben – "+n+" Vokabeln im Pool");
+  toast("🗣️ Aktiv-Training: Deutsch sehen, "+LNG.name+" schreiben – "+n+" Vokabeln im Pool");
 }
 function ensureProgress(){
   const t=todayStr();
@@ -2324,7 +2448,7 @@ function markKnown(id){
 
 /* ============================ text helpers ============================ */
 function norm(s){return (s||"").toString().toLowerCase().trim().replace(/\s+/g," ").replace(/[.!?,;:]+$/,"").replace(/^[¿¡]/,"");}
-function stripArticle(s){return String(s==null?"":s).replace(/^\s*(the|a|an)\s+/i,"").trim();}
+function stripArticle(s){s=String(s==null?"":s);if(CUR_LANG==="it")return s.replace(/^\s*(il|lo|la|i|gli|le|un|uno|una)\s+/i,"").replace(/^\s*(l\x27|un\x27)\s*/i,"").trim();return s.replace(/^\s*(the|a|an)\s+/i,"").trim();}
 function stripDeArticle(s){return String(s==null?"":s).replace(/^\s*(der|die|das|den|dem|ein|eine|einen|einem)\s+/i,"").trim();}
 function normAns(s){return norm(stripArticle(s));}
 function answersOf(card){return String(card.en).split(/[\/;]/).map(s=>normAns(s)).filter(Boolean);}
@@ -2425,10 +2549,10 @@ function sessHead(s,c,extra){
 let ttsVoices=[];
 function ttsAvailable(){return typeof window!=="undefined" && "speechSynthesis" in window && typeof window.SpeechSynthesisUtterance!=="undefined";}
 function loadVoices(){try{ttsVoices=ttsAvailable()?window.speechSynthesis.getVoices():[];}catch(e){ttsVoices=[];}}
-function enVoices(){return ttsVoices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith("en"));}
+function enVoices(){return ttsVoices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith(LNG.tts.slice(0,2).toLowerCase()));}
 function voiceGender(v){const n=(v.name||"").toLowerCase();
-  if(/female|woman|frau|weibl|samantha|victoria|karen|zira|susan|tessa|fiona|moira|serena|allison|ava|joanna|amy|emma|salli|kimberly|kendra|nicole|catherine|hazel|sonia|libby|aria|jenny|michelle|stephanie/.test(n))return "f";
-  if(/\bmale\b|\bman\b|mann|männl|daniel|david|mark|alex|fred|\btom\b|oliver|arthur|brian|matthew|\bguy\b|james|george|ryan|eric|aaron|liam|english male|us english male|uk english male/.test(n))return "m";
+  if(/female|woman|frau|weibl|samantha|victoria|karen|zira|susan|tessa|fiona|moira|serena|allison|ava|joanna|amy|emma|salli|kimberly|kendra|nicole|catherine|hazel|sonia|libby|aria|jenny|michelle|stephanie|federica|elsa|paola|carla|silvia|alice/.test(n))return "f";
+  if(/\bmale\b|\bman\b|mann|männl|daniel|david|mark|alex|fred|\btom\b|oliver|arthur|brian|matthew|\bguy\b|james|george|ryan|eric|aaron|liam|english male|us english male|uk english male|luca|diego|paolo|giorgio/.test(n))return "m";
   return "u";
 }
 function pickVoiceName(){const evs=enVoices();if(!evs.length)return "";
@@ -2441,7 +2565,7 @@ function speak(text,lang,voiceName,onend){
   try{
     window.speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(String(text));
-    u.lang=lang||"en-US";u.rate=ui.ttsRate||0.9;
+    u.lang=lang||LNG.tts;u.rate=ui.ttsRate||0.9;
     let v=voiceName?ttsVoices.find(x=>x.name===voiceName):null;
     if(!v){const nm=pickVoiceName();if(nm)v=ttsVoices.find(x=>x.name===nm);}   // zufällige m/w-Stimme
     if(!v){const pref=(lang||"en").slice(0,2).toLowerCase();v=ttsVoices.find(x=>x.lang&&x.lang.toLowerCase().startsWith(pref));}
@@ -2545,7 +2669,7 @@ function renderUsage(){
 }
 
 function activate(tab){
-  if(!cwReady()&&(tab==="chat"||tab==="adventure"))tab="dashboard"; // v54: KI-Tabs sind in der Web-App ausgeblendet (auch nicht per Tastatur erreichbar)
+  if(!cwReady()&&(tab==="chat"||tab==="adventure"))tab="dashboard"; if(CUR_LANG!=="en"&&(tab==="test"||tab==="adventure"))tab="dashboard"; // v56: EN-spezifische Tabs nur auf Englisch // v54: KI-Tabs sind in der Web-App ausgeblendet (auch nicht per Tastatur erreichbar)
   usageTick(); // Zeit bis hierher gehört noch zum alten Tab
   if(tab!==curTab){curTab=tab;usageOpen(usageModeKey());}
   tabs.forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
@@ -2728,9 +2852,9 @@ function renderFlash(){
       <button class="btn" data-g="4">😎 Leicht<br><small style="font-weight:600;opacity:.85">${previewDays(c.id,4)} T</small></button>
     </div>
     <div class="row center" id="fcFlipHint" style="justify-content:center"><button class="btn lg" id="flipBtn">Karte umdrehen</button></div>
-    <div class="center" style="margin-top:10px"><button class="iconbtn" id="fcKnownBtn" style="font-size:12px" title="Diese Vokabel kannst du schon – sofort als gemeistert wegräumen, ohne sie 7× zu bestätigen">✅ Kann ich schon</button> <button class="iconbtn" id="fcActBtn" style="font-size:12px" title="Diese Vokabel im Aktiv-Training (Deutsch→Englisch) üben – antippen zum Umschalten">${actBtnLabel(c)}</button> <button class="iconbtn" id="fcEditBtn" style="font-size:12px">✏️ Bedeutung korrigieren</button> <button class="iconbtn" id="fcDelBtn" style="font-size:12px;color:var(--bad)" title="Falsche/unbrauchbare Vokabel dauerhaft aus dem Stapel entfernen – unter „Verwalten“ wiederherstellbar">🗑️ Löschen</button></div>
+    <div class="center" style="margin-top:10px"><button class="iconbtn" id="fcKnownBtn" style="font-size:12px" title="Diese Vokabel kannst du schon – sofort als gemeistert wegräumen, ohne sie 7× zu bestätigen">✅ Kann ich schon</button> <button class="iconbtn" id="fcActBtn" style="font-size:12px" title="Diese Vokabel im Aktiv-Training (Deutsch→${LNG.name}) üben – antippen zum Umschalten">${actBtnLabel(c)}</button> <button class="iconbtn" id="fcEditBtn" style="font-size:12px">✏️ Bedeutung korrigieren</button> <button class="iconbtn" id="fcDelBtn" style="font-size:12px;color:var(--bad)" title="Falsche/unbrauchbare Vokabel dauerhaft aus dem Stapel entfernen – unter „Verwalten“ wiederherstellbar">🗑️ Löschen</button></div>
     <div id="fcEdit" style="display:none;margin-top:8px;text-align:left;border:1px solid var(--line);border-radius:12px;padding:12px">
-      <div class="muted" style="font-size:12px">Englisch: <b>${esc(c.en)}</b></div>
+      <div class="muted" style="font-size:12px">${LNG.name}: <b>${esc(c.en)}</b></div>
       <div class="muted" style="font-size:12px;margin-top:6px">Deutsche Bedeutung</div>
       <input id="fcEditDe" type="text" style="width:100%" value="${esc(c.de)}">
       <div class="muted" style="font-size:12px;margin-top:6px">Aussprache (optional)</div>
@@ -2741,9 +2865,9 @@ function renderFlash(){
   function flip(){cardEl.classList.add("flip");byId("fcBtns").style.display="flex";byId("fcFlipHint").style.display="none";}
   cardEl.addEventListener("click",e=>{if(e.target.closest(".spk"))return;flip();});
   byId("flipBtn").addEventListener("click",flip);
-  area.querySelectorAll(".spk").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();speak(c.en,"en-US");}));
-  const fcA=byId("fcAuto");if(fcA)fcA.addEventListener("change",e=>{ui.autoFlash=e.target.checked;save(K.ui,ui);if(ui.autoFlash)speak(c.en,"en-US");});
-  if(ui.autoFlash&&ttsAvailable())setTimeout(()=>speak(c.en,"en-US"),250);
+  area.querySelectorAll(".spk").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();speak(c.en,LNG.tts);}));
+  const fcA=byId("fcAuto");if(fcA)fcA.addEventListener("change",e=>{ui.autoFlash=e.target.checked;save(K.ui,ui);if(ui.autoFlash)speak(c.en,LNG.tts);});
+  if(ui.autoFlash&&ttsAvailable())setTimeout(()=>speak(c.en,LNG.tts),250);
   const _kn=byId("fcKnownBtn");if(_kn)_kn.addEventListener("click",()=>{markKnown(c.id);syncLevel(true);toast("✅ Als gekonnt markiert – kommt lange nicht wieder.");sessAdvance(fcSess,c,true);renderFlash();});
   bindActBtn("fcActBtn",c);
   bindDel("fcDelBtn",fcSess,c,renderFlash);
@@ -2772,7 +2896,7 @@ function renderMC(){
   area.innerHTML=`${sessHead(mcSess,c)}
     ${autoChkHTML("mcAuto","autoMc","Wort automatisch vorlesen")}
     <div class="card pad center" style="margin:2px 0 8px;padding:12px 18px">
-      <div class="muted" style="font-size:13px">${dir==="en2de"?"Was bedeutet:":"Wie heißt auf Englisch:"}</div>
+      <div class="muted" style="font-size:13px">${dir==="en2de"?"Was bedeutet:":"Wie heißt auf "+LNG.name+":"}</div>
       <div class="word">${esc(c[askField])}</div>
       <div class="row center" style="justify-content:center;margin-top:6px">
         <button class="iconbtn spk" title="englisches Wort hören">🔊 Wort hören</button>
@@ -2785,15 +2909,15 @@ function renderMC(){
     ${delBtnHTML("mcDelBtn")}`;
   let mcCorrect=false,answered=false;
   bindDel("mcDelBtn",mcSess,c,renderMC);
-  area.querySelectorAll(".spk").forEach(b=>b.addEventListener("click",()=>speak(c.en,"en-US")));
-  const mcA=byId("mcAuto");if(mcA)mcA.addEventListener("change",e=>{ui.autoMc=e.target.checked;save(K.ui,ui);if(ui.autoMc&&dir==="en2de")speak(c.en,"en-US");});
-  if(ui.autoMc&&dir==="en2de"&&ttsAvailable())setTimeout(()=>speak(c.en,"en-US"),250);
+  area.querySelectorAll(".spk").forEach(b=>b.addEventListener("click",()=>speak(c.en,LNG.tts)));
+  const mcA=byId("mcAuto");if(mcA)mcA.addEventListener("change",e=>{ui.autoMc=e.target.checked;save(K.ui,ui);if(ui.autoMc&&dir==="en2de")speak(c.en,LNG.tts);});
+  if(ui.autoMc&&dir==="en2de"&&ttsAvailable())setTimeout(()=>speak(c.en,LNG.tts),250);
   byId("mcOpts").querySelectorAll(".mc-opt").forEach(btn=>btn.addEventListener("click",()=>{
     if(answered)return;answered=true;
     mcCorrect=btn.dataset.id===c.id;
     byId("mcOpts").querySelectorAll(".mc-opt").forEach(b=>{b.disabled=true;if(b.dataset.id===c.id)b.classList.add("correct");else if(b===btn)b.classList.add("wrong");});
     answer(c.id,mcCorrect);
-    if(ui.autoMc&&ttsAvailable()&&dir!=="en2de")speak(c.en,"en-US");
+    if(ui.autoMc&&ttsAvailable()&&dir!=="en2de")speak(c.en,LNG.tts);
     const fb=byId("mcFb");if(fb){if(mcCorrect){fb.className="feedback center ok";fb.textContent=pick(["Richtig! 🎉","Korrekt! 💪","Sehr gut!"]);}else{fb.className="feedback center bad";fb.innerHTML="Fast! Richtig: <b>"+esc(c[ansField])+"</b>";}}
     byId("mcNext").style.display="flex";
   }));
@@ -2811,7 +2935,7 @@ function renderWrite(){
   area.innerHTML=`${sessHead(wrSess,c)}
     ${autoChkHTML("wrAuto","autoWrite","Lösung automatisch vorlesen")}
     <div class="card pad center" style="margin:6px 0 12px">
-      <div class="muted" style="font-size:13px">Schreibe auf Englisch (ohne „the/a/an"):</div>
+      <div class="muted" style="font-size:13px">Schreibe auf ${LNG.name} (ohne „${LNG.artHint}"):</div>
       <div class="word">${esc(c.de)}</div>
       <div class="pron" id="wrPron" style="visibility:hidden">🔊 ${esc(c.pron)}</div>
     </div>
@@ -2825,15 +2949,15 @@ function renderWrite(){
       <div class="feedback" id="wrFb"></div>
       <div class="row center" id="wrNext" style="justify-content:center;display:none;margin-top:6px"><button class="btn lg" id="wrNextBtn">Weiter →</button></div>
       ${delBtnHTML("wrDelBtn")}
-      <div style="margin-top:6px"><button class="iconbtn" id="wrActBtn" style="font-size:12px" title="Diese Vokabel im Aktiv-Training (Deutsch→Englisch) üben – antippen zum Umschalten">${actBtnLabel(c)}</button></div>
+      <div style="margin-top:6px"><button class="iconbtn" id="wrActBtn" style="font-size:12px" title="Diese Vokabel im Aktiv-Training (Deutsch→${LNG.name}) üben – antippen zum Umschalten">${actBtnLabel(c)}</button></div>
     </div>`;
   const inp=byId("wrInput");inp.focus();
   bindDel("wrDelBtn",wrSess,c,renderWrite);
   bindActBtn("wrActBtn",c);
   let done=false,wasCorrect=false;
   byId("wrHint").addEventListener("click",()=>{byId("wrPron").style.visibility="visible";});
-  byId("wrSpk").addEventListener("click",()=>speak(c.en,"en-US"));
-  const wrA=byId("wrAuto");if(wrA)wrA.addEventListener("change",e=>{ui.autoWrite=e.target.checked;save(K.ui,ui);if(ui.autoWrite&&done)speak(c.en,"en-US");});
+  byId("wrSpk").addEventListener("click",()=>speak(c.en,LNG.tts));
+  const wrA=byId("wrAuto");if(wrA)wrA.addEventListener("change",e=>{ui.autoWrite=e.target.checked;save(K.ui,ui);if(ui.autoWrite&&done)speak(c.en,LNG.tts);});
   function check(){
     if(done)return;done=true;
     wasCorrect=answersOf(c).includes(normAns(inp.value));
@@ -2841,7 +2965,7 @@ function renderWrite(){
     const fb=byId("wrFb");
     if(wasCorrect){fb.className="feedback ok";fb.textContent=pick(["Perfekt! 🎉","Richtig geschrieben! 💪","Super!"]);}
     else{fb.className="feedback bad";fb.innerHTML="Richtig: <b>"+esc(c.en)+"</b>";}
-    if(ui.autoWrite&&ttsAvailable())speak(c.en,"en-US");
+    if(ui.autoWrite&&ttsAvailable())speak(c.en,LNG.tts);
     inp.disabled=true;byId("wrCheck").disabled=true;byId("wrNext").style.display="flex";
   }
   byId("wrCheck").addEventListener("click",check);
@@ -2859,9 +2983,9 @@ async function genSentence(card){
   if(cache&&cache.level===lvl&&(cache.len||"normal")===ln&&cache.en)return cache;
   // v53 PWA ohne KI: bester verfügbarer Satz statt Level-genau – Cache (auch level-fremd) → eingebackener Seed → Beispiel → Wort
   if(!aiReady())return (cache&&cache.en?cache:null)||(typeof SENT_SEED!=="undefined"&&SENT_SEED[card.id])||{en:card.ex_en||(card.en+"."),de:card.ex_de||card.de,level:lvl,fallback:true};
-  const lenTxt=ln==="kurz"?"GENAU EINEN sehr kurzen, praegnanten englischen Satz (maximal 7 Woerter)"
-            :ln==="xlang"?"GENAU EINEN sehr langen, detaillierten englischen Satz (22-30 Woerter, gern mit Nebensatz)"
-                         :"GENAU EINEN englischen Satz (10-16 Woerter)";
+  const lenTxt=ln==="kurz"?"GENAU EINEN sehr kurzen, praegnanten "+LNG.adj+" Satz (maximal 7 Woerter)"
+            :ln==="xlang"?"GENAU EINEN sehr langen, detaillierten "+LNG.adj+" Satz (22-30 Woerter, gern mit Nebensatz)"
+                         :"GENAU EINEN "+LNG.adj+" Satz (10-16 Woerter)";
   const prompt="Schreibe "+lenTxt+" (Niveau "+lvl+", Reise-/Alltag) mit dem Wort \""+card.en+"\" (Bedeutung: "+card.de+"). "
     +(hard?"Natuerlich und idiomatisch, wie ein Muttersprachler. ":"So einfach, dass ihn ein Anfaenger versteht. ")
     +"WIRKLICH NUR EIN einziger Satz, niemals zwei. "
@@ -2904,7 +3028,7 @@ function splitSentences(text){
 }
 async function translateSentence(en){
   const key=norm2(en);if(trSent[key])return trSent[key];if(!aiReady())return null;
-  try{const t=unwrapText(await askWithTimeout("Uebersetze diesen englischen Satz sinngemaess und einfach ins Deutsche. Antworte NUR mit der deutschen Uebersetzung, ohne Anfuehrungszeichen:\n"+en,[],30000));
+  try{const t=unwrapText(await askWithTimeout("Uebersetze diesen "+LNG.adj+" Satz sinngemaess und einfach ins Deutsche. Antworte NUR mit der deutschen Uebersetzung, ohne Anfuehrungszeichen:\n"+en,[],30000));
     const de=String(t||"").trim().replace(/^["„'\s]+|["“'\s]+$/g,"");if(de){trSent[key]=de;save(K.trsent,trSent);}return de||null;
   }catch(e){return null;}
 }
@@ -2979,7 +3103,7 @@ function renderListen(){
   /* ---- Transkript-Original-Sätze (echte Video-Sätze, optionale Übersetzung, kein FSRS) ---- */
   if(trS&&ui.listenMode==="satz"){
     const sc=selectedScript();
-    if(!sc){area.innerHTML=toggle+emptyBox("Noch kein Transkript geladen. Lege eines in Reise-Englisch/_Transkripte ab und lade es im Dashboard. 🎬");binds();return;}
+    if(!sc){area.innerHTML=toggle+emptyBox("Noch kein Transkript geladen. Lege eines in "+LNG.obsRoot+"/_Transkripte ab und lade es im Dashboard. 🎬");binds();return;}
     if(!sc.fulltext){
       area.innerHTML=toggle+`<div class="empty"><div class="em">🎬</div><p id="trLoadMsg">Hole den Original-Text von „${esc(sc.title)}“ … ⏳</p></div>`;binds();
       loadTranscriptText().then(okk=>{
@@ -3003,7 +3127,7 @@ function renderListen(){
           <div id="trDe" style="margin-top:12px"><button class="btn ghost" id="trTr">🇩🇪 Übersetzung zeigen</button></div>
         </div>
       </div>`+stages;
-    const play=()=>speak(s.en,"en-US",lsVoice);byId("lsPlay").addEventListener("click",play);setTimeout(play,300);
+    const play=()=>speak(s.en,LNG.tts,lsVoice);byId("lsPlay").addEventListener("click",play);setTimeout(play,300);
     reveal();
     const tb=byId("trTr");if(tb)tb.addEventListener("click",async()=>{tb.disabled=true;tb.textContent="⏳ übersetze …";const de=await translateSentence(s.en);const box=byId("trDe");if(box)box.innerHTML=de?('<b>Sinngemäß:</b> '+esc(de)):'<span class="muted">Übersetzung ist nur im Artefakt (mit KI) verfügbar.</span>';});
     byId("lsStage2").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{const ok=b.dataset.ok==="1";toast(ok?pick(["Klasse! 🎉","Stark! 💪"]):"Kein Problem – nochmal hören hilft. 🙂");lsSess.done.add(lsSess.i);lsSess.i++;renderListen();}));
@@ -3029,7 +3153,7 @@ function renderListen(){
           <div class="ex" style="margin-top:8px"><b>Bedeutung:</b> ${esc(c.de)}</div>
         </div>
       </div>`+stages+lsDelButtonHTML();
-    const play=()=>speak(c.en,"en-US",lsVoice);
+    const play=()=>speak(c.en,LNG.tts,lsVoice);
     byId("lsPlay").addEventListener("click",play);setTimeout(play,300);
     reveal();bindRate();binds();bindLsDel(c);
   }else{
@@ -3064,7 +3188,7 @@ function renderListen(){
           </div>
           <div class="row center" id="dkNext" style="justify-content:center;display:none;margin-top:6px"><button class="btn lg" id="dkNextBtn">Weiter →</button></div>
         </div>`+lsDelButtonHTML();
-        const play=()=>speak(sen.en,"en-US",lsVoice);
+        const play=()=>speak(sen.en,LNG.tts,lsVoice);
         byId("lsPlay").addEventListener("click",play);setTimeout(play,300);
         const inp=byId("dkInput");inp.focus();
         let done=false,okEn=false,okDe=null,deDone=false;
@@ -3122,9 +3246,9 @@ function renderListen(){
             <button class="btn ok lg" data-sh="3">💪 Kam gut mit</button>
           </div>
         </div>`+lsDelButtonHTML();
-        const play=()=>speak(sen.en,"en-US",lsVoice);
+        const play=()=>speak(sen.en,LNG.tts,lsVoice);
         byId("lsPlay").addEventListener("click",play);setTimeout(play,300);
-        byId("shSlow").addEventListener("click",()=>{const r=ui.ttsRate;ui.ttsRate=Math.max(0.5,(r||0.9)-0.25);speak(sen.en,"en-US",lsVoice);ui.ttsRate=r;});
+        byId("shSlow").addEventListener("click",()=>{const r=ui.ttsRate;ui.ttsRate=Math.max(0.5,(r||0.9)-0.25);speak(sen.en,LNG.tts,lsVoice);ui.ttsRate=r;});
         area.querySelectorAll("[data-sh]").forEach(b=>b.addEventListener("click",()=>{
           const g=parseInt(b.dataset.sh,10),good=g>=3;
           answerG(c.id,g);
@@ -3141,7 +3265,7 @@ function renderListen(){
         <button class="btn lg" id="lsPlay">🔊 Satz anhören</button>
         <div id="lsReveal" style="display:none"><div class="word" style="font-size:20px">„${esc(sen.en)}"</div><div class="ex" style="margin-top:10px"><b>Sinngemäß:</b> ${esc(sen.de)}</div><div class="pron" style="margin-top:6px">Vokabel: ${esc(c.en)} · ${esc(c.pron||"")}</div></div>
       </div>`+stages+lsDelButtonHTML();
-        const play=()=>speak(sen.en,"en-US",lsVoice);
+        const play=()=>speak(sen.en,LNG.tts,lsVoice);
         byId("lsPlay").addEventListener("click",play);setTimeout(play,300);
         reveal();bindRate();binds();bindLsDel(c);
       });
@@ -3163,7 +3287,7 @@ async function evalTranslation(en,deRef,typed){
   if(local>=0.6)return {ok:true,tipp:""};
   if(!aiReady())return {ok:local>=0.35,tipp:local>=0.35?"":"Vergleiche mit der Musterübersetzung."};
   try{
-    const p="Englischer Satz: \""+en+"\"\nMusteruebersetzung: \""+deRef+"\"\nUebersetzung des Lerners: \""+typed+"\"\n\n"
+    const p=LNG.name+"er Satz: \""+en+"\"\nMusteruebersetzung: \""+deRef+"\"\nUebersetzung des Lerners: \""+typed+"\"\n\n"
       +"Ist die Lerner-Uebersetzung SINNGEMAESS richtig (andere Wortwahl/Stil ok, Hauptsache der Sinn stimmt)? "
       +"NUR JSON: {\"ok\":true,\"tipp\":\"<bei Fehlern 1 kurzer deutscher Hinweis was falsch verstanden wurde, sonst leer>\"}";
     const r=unwrapText(await askWithTimeout(p,[],20000));
@@ -3306,7 +3430,7 @@ async function sortTopicsAI(){
       const part=targets.slice(i,i+BATCH);
       if(el){el.style.color="var(--muted)";el.textContent="🗂️ Sortiere … "+Math.min(i+BATCH,targets.length)+"/"+targets.length;}
       const lines=part.map((c,k)=>(k+1)+". "+c.en+" = "+(c.de||"")).join("\n");
-      const p="Du ordnest englische Vokabeln eines deutschen Reise-Englisch-Lerners GENAU EINEM Thema zu. "
+      const p="Du ordnest "+LNG.adjE+" Vokabeln eines deutschen Reise-Sprachen-Lerners GENAU EINEM Thema zu. "
         +"Erlaubte Themen (immer das am besten passende waehlen): "+themen+", "+TOPIC_CATCHALL+". "
         +"Situations-Woerter in die Reise-Themen; ALLGEMEINE Woerter in die Allgemein-Themen: "
         +"Personen/Verwandtschaft -> Menschen & Familie; Gefuehle/Meinungen/Bewertungen -> Gefühle & Meinung; "
@@ -3330,7 +3454,7 @@ async function sortTopicsAI(){
 /* ============================ GEMEISTERT (Übersicht) ============================ */
 let mastLang = (ui.mastLang==="de")?"de":"en";
 function setMastLang(l){mastLang=(l==="de")?"de":"en";ui.mastLang=mastLang;save(K.ui,ui);renderMastered();}
-function mastSpeak(btn){const r=btn.closest(".mw-row");if(r&&r.dataset.en)speak(r.dataset.en,"en-US");}
+function mastSpeak(btn){const r=btn.closest(".mw-row");if(r&&r.dataset.en)speak(r.dataset.en,LNG.tts);}
 function mastDelete(btn){const r=btn.closest(".mw-row");if(!r||!r.dataset.id)return;armConfirm(btn,()=>{deleteCard(r.dataset.id);syncLevel(false);toast("🗑️ Vokabel gelöscht.");renderMastered();renderDashboard();});}
 function masteredCards(){return allCards().filter(c=>isMastered(progress[c.id]));}
 function renderMastered(){
@@ -3338,8 +3462,8 @@ function renderMastered(){
   const head=`<div class="mast-top">
     <div class="lead">🏆 Du hast <b>${total}</b> Vokabel${total===1?"":"n"} gemeistert${total?` in <b>${nCats}</b> Kategorie${nCats===1?"":"n"}`:""}.</div>
     <div class="seg" role="tablist" aria-label="Anzeige-Sprache">
-      <button class="${lang==="en"?"active":""}" type="button" onclick="setMastLang('en')" title="Englisch zuerst, Deutsch aufdecken">🇬🇧 Englisch</button>
-      <button class="${lang==="de"?"active":""}" type="button" onclick="setMastLang('de')" title="Deutsch zuerst, Englisch aufdecken">🇩🇪 Deutsch</button>
+      <button class="${lang==="en"?"active":""}" type="button" onclick="setMastLang('en')" title="${LNG.name} zuerst, Deutsch aufdecken">${LNG.flag} ${LNG.name}</button>
+      <button class="${lang==="de"?"active":""}" type="button" onclick="setMastLang('de')" title="Deutsch zuerst, ${LNG.name} aufdecken">🇩🇪 Deutsch</button>
     </div></div>`;
   if(total===0){
     byId("mastArea").innerHTML=head+`<div class="card pad empty"><div class="em">🏆</div><p>Noch keine gemeisterten Vokabeln.</p><p class="muted" style="font-size:13px">Eine Vokabel gilt als <b>gemeistert</b>, sobald du sie <b>${MASTER_HITS}×</b> richtig beantwortet hast UND sie langfristig sitzt (Wiederhol-Abstand ≥ ${MASTER_S} Tage). Übe weiter – das schaffst du bald! 💪</p></div>`;
@@ -3353,7 +3477,7 @@ function renderMastered(){
     const list=groups[cat].slice().sort((a,b)=>coll.compare(lang==="de"?a.de:a.en, lang==="de"?b.de:b.en));
     const rows=list.map(c=>{
       const en=esc(c.en), de=esc(c.de), pr=c.pron?esc(c.pron):"";
-      const spk='<button class="iconbtn spk mw-spk" type="button" onclick="mastSpeak(this)" title="Englisch anhören" aria-label="Englisch vorlesen">🔊</button>';
+      const spk='<button class="iconbtn spk mw-spk" type="button" onclick="mastSpeak(this)" title="'+LNG.name+' anhören" aria-label="'+LNG.name+' vorlesen">🔊</button>';
       const engHTML=`<span class="mw-word">${en}</span>`+(pr?`<span class="mw-pron">${pr}</span>`:"")+spk;
       const deHTML=`<span class="mw-word">${de}</span>`;
       const primary=lang==="de"?deHTML:engHTML;
@@ -3391,7 +3515,7 @@ function armConfirm(btn,fn){
   setTimeout(()=>{if(btn.dataset.armed==="1"){btn.dataset.armed="0";btn.textContent=btn.dataset.label;}},3500);
 }
 byId("resetProgBtn").addEventListener("click",e=>armConfirm(e.currentTarget,()=>{progress={};history={};save(K.prog,progress);save(K.hist,history);ensureProgress();ui.lvl="A0";save(K.ui,ui);toast("Fortschritt zurückgesetzt.");renderManage();renderDashboard();}));
-byId("resetAllBtn").addEventListener("click",e=>armConfirm(e.currentTarget,()=>{[K.prog,K.user,K.hist,K.hidden,K.del,K.usage].forEach(k=>localStorage.removeItem(k));progress={};userCards=[];history={};hidden=[];deleted=[];usage={};ui.lvl="A0";save(K.ui,ui);ensureProgress();toast("Alles zurückgesetzt.");renderManage();buildFilterBar();renderDashboard();}));
+byId("resetAllBtn").addEventListener("click",e=>armConfirm(e.currentTarget,()=>{[K.prog,K.user,K.hist,K.hidden,K.del,K.usage].forEach(k=>localStorage.removeItem(nsKey(k)));progress={};userCards=[];history={};hidden=[];deleted=[];usage={};ui.lvl="A0";save(K.ui,ui);ensureProgress();toast("Alles zurückgesetzt.");renderManage();buildFilterBar();renderDashboard();}));
 
 /* ============================ helpers ============================ */
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
@@ -3400,7 +3524,7 @@ let toastT;
 function toast(m){const t=byId("toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1900);}
 
 /* ============================ Skript-Loader (Obsidian + KI) ============================ */
-const TRANSCRIPT_DIR="Reise-Englisch/_Transkripte";
+const TRANSCRIPT_DIR=LNG.obsRoot+"/_Transkripte";
 function cwReady(){return typeof window!=="undefined"&&window.cowork&&typeof window.cowork.callMcpTool==="function";}
 function aiReady(){return cwReady()&&typeof window.cowork.askClaude==="function";}
 function norm2(s){return normAns(String(s==null?"":s).split(/[\/;]/)[0]);}
@@ -3454,10 +3578,10 @@ function uniqueWords(text){
   return out;
 }
 // Knappe Uebersetzung EINES Wortblocks. Kurze KI-Antwort => kein Abschneiden. 1 Wiederholung bei Parse-Fehlschlag.
-const WORD_PROMPT="Du bist ein Englischlehrer fuer einen deutschen Anfaenger (A0-A1). Im Datenteil steht eine Liste englischer Woerter (eines pro Zeile). "
+const WORD_PROMPT="Du bist ein "+LNG.name+"-Lehrer fuer einen deutschen Anfaenger (A0-A1). Im Datenteil steht eine Liste "+LNG.adjR+" Woerter (eines pro Zeile). "
   +"Uebersetze JEDES Wort ins Deutsche - knapp und einfach. Antworte AUSSCHLIESSLICH mit einem JSON-Array, ein Objekt pro Wort, genau so: "
   +'[{"en":"gate","de":"Tor/Flugsteig","pron":"geet"}] '
-  +"en = das englische Wort genau wie vorgegeben; de = einfache deutsche Uebersetzung (bei mehreren Bedeutungen die haeufigste, ggf. 1-2 mit / getrennt); "
+  +"en = das "+LNG.adjE+" Wort genau wie vorgegeben; de = einfache deutsche Uebersetzung (bei mehreren Bedeutungen die haeufigste, ggf. 1-2 mit / getrennt); "
   +"pron = deutsche Lautschrift (z. B. \"geet\"). KEINE Beispielsaetze, KEINE weiteren Felder, KEIN Text drumherum.";
 // askClaude mit Zeitlimit, damit ein haengender KI-Aufruf NICHT die ganze Vervollstaendigung blockiert.
 function askWithTimeout(prompt,data,ms){
@@ -3491,8 +3615,8 @@ async function extractAllWords(text,exclude,onProgress){
 }
 async function extractVocab(text,exclude,n){
   const ex=(exclude||[]).filter(Boolean).slice(0,80).join(", ");
-  const prompt="Du bist ein geduldiger Englischlehrer fuer einen deutschen Anfaenger (Level A0-A1), der Englisch fuer Reisen UND fuer den Alltag lernt. "
-    +"Im Datenteil steht ein Text - das kann ein Video-Transkript ODER ein Nachrichten-Artikel sein. Waehle daraus bis zu "+n+" nuetzliche englische Vokabeln oder kurze Alltags-Phrasen, die ein Anfaenger zum Englischlernen braucht. Nimm ALLE nuetzlichen Woerter zum Thema des Textes - egal ob Reise, Nachrichten, Politik, Arbeit, Technik, Wissenschaft, Alltag usw. (auch wichtige Verben, Adjektive und Nomen). Bevorzuge KEIN bestimmtes Thema und beschraenke dich NICHT auf Reise-Woerter. Lieber zu viele als zu wenige. "
+  const prompt="Du bist ein geduldiger "+LNG.name+"-Lehrer fuer einen deutschen Anfaenger (Level A0-A1), der "+LNG.name+" fuer Reisen UND fuer den Alltag lernt. "
+    +"Im Datenteil steht ein Text - das kann ein Video-Transkript ODER ein Nachrichten-Artikel sein. Waehle daraus bis zu "+n+" nuetzliche "+LNG.adjE+" Vokabeln oder kurze Alltags-Phrasen, die ein Anfaenger zum "+LNG.name+"-Lernen braucht. Nimm ALLE nuetzlichen Woerter zum Thema des Textes - egal ob Reise, Nachrichten, Politik, Arbeit, Technik, Wissenschaft, Alltag usw. (auch wichtige Verben, Adjektive und Nomen). Bevorzuge KEIN bestimmtes Thema und beschraenke dich NICHT auf Reise-Woerter. Lieber zu viele als zu wenige. "
     +"Antworte AUSSCHLIESSLICH mit einem JSON-Array (kein Text drumherum, kein Markdown), genau so: "
     +'[{"en":"gate","de":"Flugsteig","pron":"geet","cat":"Flughafen & Flug","ex_en":"Boarding is at the gate.","ex_de":"Das Boarding ist am Flugsteig."}] '
     +"Regeln: Gib die Vokabel OHNE fuehrenden Artikel an (kein the/a/an und kein der/die/das davor). "
@@ -3572,7 +3696,7 @@ async function loadNewScript(){
   scriptBusy(true,"Suche neue Transkripte …");
   try{
     const files=await listTranscripts();
-    if(files.length===0)return scriptMsg("Keine Transkripte gefunden. Lege eines in Reise-Englisch/_Transkripte/ ab. 📄");
+    if(files.length===0)return scriptMsg("Keine Transkripte gefunden. Lege eines in "+LNG.obsRoot+"/_Transkripte/ ab. 📄");
     const fresh=files.filter(n=>!scripts[TRANSCRIPT_DIR+"/"+n]);
     if(fresh.length===0)return scriptMsg("Kein neues Transkript gefunden. Tipp: Mit „Neue Vokabeln laden“ holst du mehr aus den vorhandenen heraus. 👍");
     const name=fresh[0]; let path=TRANSCRIPT_DIR+"/"+name, title=name.replace(/\.md$/i,"");
@@ -3642,7 +3766,7 @@ function uniqueBase(base,taken){let n=base,k=2;while(taken&&taken.has(n.toLowerC
 async function detectLevel(text){
   if(!aiReady())return "";
   try{
-    const p="Du bewertest das CEFR-Sprachniveau eines ENGLISCHEN Textes – also wie schwer das Englisch fuer einen Lernenden ist. Antworte mit GENAU EINEM Kuerzel aus dieser Liste und sonst NICHTS: A0, A1, A1.1, A1.2, A1.3, A2, A2.1, A2.2, A2.3, B1, B1.1, B1.2, B1.3, B2, C1, C2.";
+    const p="Du bewertest das CEFR-Sprachniveau eines "+LNG.name.toUpperCase()+"-Textes – also wie schwer das "+LNG.name+" fuer einen Lernenden ist. Antworte mit GENAU EINEM Kuerzel aus dieser Liste und sonst NICHTS: A0, A1, A1.1, A1.2, A1.3, A2, A2.1, A2.2, A2.3, B1, B1.1, B1.2, B1.3, B2, C1, C2.";
     return sanitizeLevel(unwrapText(await askWithTimeout(p,[String(text||"").slice(0,8000)],30000)));
   }catch(e){return "";}
 }
@@ -3773,7 +3897,7 @@ async function completeAllTranscripts(){
 }
 
 /* ============================ Obsidian-Sicherung (Backup/Restore) ============================ */
-const BACKUP_DIR="Reise-Englisch/_Backups";
+const BACKUP_DIR=LNG.obsRoot+"/_Backups";
 const BACKUP_LATEST=BACKUP_DIR+"/Letzte_Sicherung.md";
 function backupMsg(m,err){const el=byId("backupStatus");if(el){el.style.color=err?"var(--bad)":"var(--muted)";el.textContent=m;}return undefined;}
 function backupBusy(on,m){["btnBackup","btnRestore"].forEach(id=>{const b=byId(id);if(b)b.disabled=on;});if(m!==undefined)backupMsg((on?"⏳ ":"")+m);}
@@ -3791,7 +3915,7 @@ async function doBackup(silent){
   if(!silent)backupBusy(true,"Sichere nach Obsidian …");
   try{
     const snap=backupSnapshot();
-    const note="---\ntyp: backup\ndatum: "+todayStr()+"\nvokabeln: "+allCards().length+"\ngemeistert: "+masteredCount()+"\nlevel: "+currentLevel().code+"\n---\n\n# 💾 Reise-Englisch – Sicherung\nKompletter Lernstand (Vokabeln + FSRS-Fortschritt + Statistik). Wiederherstellen: im Artefakt unter „Verwalten“ → „Aus Obsidian wiederherstellen“.\n\n```json\n"+JSON.stringify(snap)+"\n```\n";
+    const note="---\ntyp: backup\ndatum: "+todayStr()+"\nvokabeln: "+allCards().length+"\ngemeistert: "+masteredCount()+"\nlevel: "+currentLevel().code+"\n---\n\n# 💾 "+LNG.obsRoot+" – Sicherung\nKompletter Lernstand (Vokabeln + FSRS-Fortschritt + Statistik). Wiederherstellen: im Artefakt unter „Verwalten“ → „Aus Obsidian wiederherstellen“.\n\n```json\n"+JSON.stringify(snap)+"\n```\n";
     await obsidianWrite(BACKUP_LATEST,note);
     await obsidianWrite(BACKUP_DIR+"/Backup_"+todayStr()+".md",note);
     ui.lastBackup=todayStr();save(K.ui,ui);
@@ -3835,9 +3959,9 @@ function buildChatPrompt(userMsg,opening){
   const hard=/^(B2|C1|C2)/.test(lvl);
   const hist=chat.msgs.filter(m=>m.who!=="sys").slice(-6).map(m=>(m.who==="you"?"Karsten":"Coach")+": "+m.en).join("\n");
   const known=chatKnownWords(chat.cat);
-  return "Rollenspiel mit Englisch-Lerner Karsten (Deutscher). Situation: "+chat.cat+". Rolle: "+roleFor(chat.cat)+". Niveau: "+lvl+". "
+  return "Rollenspiel mit "+LNG.name+"-Lerner Karsten (Deutscher). Situation: "+chat.cat+". Rolle: "+roleFor(chat.cat)+". Niveau: "+lvl+". "
    +(hard
-       ? "Natuerliches, idiomatisches Englisch ("+lvl+"), 1-2 Saetze, max. 1 Frage, fordernd aber verstaendlich. "
+       ? "Natuerliches, idiomatisches "+LNG.name+" ("+lvl+"), 1-2 Saetze, max. 1 Frage, fordernd aber verstaendlich. "
        : "NUR 1 sehr kurzer, einfacher Satz ("+lvl+", haeufige Woerter) + max. 1 kurze Frage. ")
    +"Bleib warm in der Rolle, bau auf seiner Antwort auf, brich nie ab. "
    +(known?("Nutze gern: "+known+". "):"")
@@ -3870,8 +3994,8 @@ function stopRec(){recListening=false;chatMicUI(false);if(recog){try{recog.stop(
 function toggleRec(){if(recListening)stopRec();else startRec();}
 function reallyStartRec(){
   try{
-    recog=new SR();recog.lang="en-US";recog.interimResults=false;recog.maxAlternatives=1;
-    recListening=true;chatMicUI(true);chatStatus("🎤 Ich höre zu … sprich jetzt (Englisch).");
+    recog=new SR();recog.lang=LNG.tts;recog.interimResults=false;recog.maxAlternatives=1;
+    recListening=true;chatMicUI(true);chatStatus("🎤 Ich höre zu … sprich jetzt ("+LNG.name+").");
     recog.onresult=function(e){try{const t=e.results[0][0].transcript;const inp=byId("chatInput");if(inp)inp.value=t;}catch(_){}recListening=false;chatMicUI(false);chatSendInput();};
     recog.onerror=function(e){const err=(e&&e.error)||"";recListening=false;chatMicUI(false);if(err==="not-allowed"||err==="service-not-allowed")micFail();else if(err==="no-speech")chatStatus("Nichts gehört – tippe „🎤 Sprechen“ und sprich nochmal.",true);else chatStatus("Spracheingabe abgebrochen ("+err+"). Tippen geht auch.",true);};
     recog.onend=function(){recListening=false;chatMicUI(false);};
@@ -3897,7 +4021,7 @@ async function chatTurn(userMsg,opening){
     chat.msgs.push({who:"coach",en:(obj.reply||"").trim()});
     if(chat.msgs.length>120)chat.msgs=chat.msgs.slice(-120);
     save(K.chat,chat);renderChat();ding();
-    if(ui.chatAuto&&ttsAvailable())speak(obj.reply,"en-US");
+    if(ui.chatAuto&&ttsAvailable())speak(obj.reply,LNG.tts);
   }catch(e){chatStatus("Fehler: "+((e&&e.message)||e),true);}
   finally{chatBusy=false;chatSetBusy(false);chatTyping(false);}
 }
@@ -3958,8 +4082,8 @@ async function fluFinish(){
   if(!aiReady()){if(res)res.textContent="Geschafft: "+words+" Wörter in 90 Sekunden! (Die KI-Auswertung gibt es nur im Artefakt.)";return;}
   if(res)res.innerHTML='<span class="spinner"></span>Ich werte deine 90 Sekunden aus …';
   try{
-    const p="Englisch-Lerner Karsten hat 90 Sekunden frei zum Thema \""+topic+"\" geschrieben:\n"+text
-      +"\n\nBewerte streng wie ein Pruefer. NUR JSON: {\"level\":\"<A0|A1.1|A1.2|A1.3|A2.1|A2.2|A2.3|B1.1|B1.2|B1.3|B2.1|B2.2|B2.3|C1.1|C1.2|C1.3|C2>\",\"tipps\":[\"<max 3 kurze deutsche Tipps>\"],\"besser\":\"<der schwaechste Satz, korrigiert auf Englisch>\"}";
+    const p=LNG.name+"-Lerner Karsten hat 90 Sekunden frei zum Thema \""+topic+"\" geschrieben:\n"+text
+      +"\n\nBewerte streng wie ein Pruefer. NUR JSON: {\"level\":\"<A0|A1.1|A1.2|A1.3|A2.1|A2.2|A2.3|B1.1|B1.2|B1.3|B2.1|B2.2|B2.3|C1.1|C1.2|C1.3|C2>\",\"tipps\":[\"<max 3 kurze deutsche Tipps>\"],\"besser\":\"<der schwaechste Satz, korrigiert auf "+LNG.name+">\"}";
     const r=unwrapText(await askWithTimeout(p,[],30000));
     const o=extractJsonObject(r);
     if(o&&o.level){
@@ -4038,8 +4162,8 @@ function advScene(){return ADV_SCENES[Math.min(adv.scene||0,ADV_SCENES.length-1)
 function curScene(){
   if(adv.custom&&adv.custom.desc)return {custom:true,id:"custom",t:"🎬 Eigene Szene",sub:adv.custom.desc,
     ctx:"Vom Lerner FREI gewuenschte Situation (auf Deutsch beschrieben): \""+adv.custom.desc+"\". Versetze ihn realistisch genau dort hinein.",
-    role:"eine passende, realistische englischsprachige Person, die Karsten in dieser Situation trifft (z.B. ein anderer Wanderer, ein Verkaeufer, ein Einheimischer)",
-    goal:"dich in dieser selbst gewaehlten Situation auf Englisch verstaendigen"};
+    role:"eine passende, realistische "+LNG.name+" sprechende Person, die Karsten in dieser Situation trifft (z.B. ein anderer Wanderer, ein Verkaeufer, ein Einheimischer)",
+    goal:"dich in dieser selbst gewaehlten Situation auf "+LNG.name+" verstaendigen"};
   const sc=advScene();return {custom:false,id:sc.id,t:sc.t,sub:sc.goal,ctx:sc.ctx,role:sc.role,goal:sc.goal};
 }
 function advStatus(m,err){const el=byId("advStatus");if(el){el.style.color=err?"var(--bad)":"var(--muted)";el.textContent=m||"";}}
@@ -4048,8 +4172,8 @@ function advTyping(on){const log=byId("advLog");if(!log)return;const ex=byId("ad
 function buildAdvPrompt(userMsg,opening){
   const sc=curScene(),lvl=inputLevel();
   const hist=adv.msgs.filter(m=>m.who!=="sys").slice(-6).map(m=>(m.who==="you"?"Karsten":"Local")+": "+m.en).join("\n");
-  return "Rollenspiel-Immersion mit Englisch-Lerner Karsten (Deutscher). Szene: "+sc.ctx+" Rolle: "+sc.role+". Sein Ziel: "+sc.goal+" "
-   +"Natuerliches, idiomatisches Englisch ("+lvl+"), wie eine echte Person, max. 1-2 Saetze + 1 Frage. Bleib strikt in der Rolle, brich nie ab. "
+  return "Rollenspiel-Immersion mit "+LNG.name+"-Lerner Karsten (Deutscher). Szene: "+sc.ctx+" Rolle: "+sc.role+". Sein Ziel: "+sc.goal+" "
+   +"Natuerliches, idiomatisches "+LNG.name+" ("+lvl+"), wie eine echte Person, max. 1-2 Saetze + 1 Frage. Bleib strikt in der Rolle, brich nie ab. "
    +"done=true wenn er das Szenen-Ziel erkennbar erreicht hat, sonst false. "
    +"correction: nur bei echtem Missverstaendnis, kurz deutsch, sonst leer. errType: Hauptfehlertyp (Grammatik|Wortschatz|Wortstellung|Rechtschreibung) oder leer. "
    +"NUR JSON: {\"reply\":\"...\",\"correction\":\"...\",\"errType\":\"...\",\"done\":false}. "
@@ -4069,7 +4193,7 @@ async function advTurn(userMsg,opening){
     if(adv.msgs.length>120)adv.msgs=adv.msgs.slice(-120);
     adv.canAdvance=!!obj.done;
     save(K.adv,adv);renderAdv();ding();
-    if(ui.chatAuto&&ttsAvailable())speak(obj.reply,"en-US");
+    if(ui.chatAuto&&ttsAvailable())speak(obj.reply,LNG.tts);
     if(obj.done)advStatus("🎯 Ziel erreicht! Tippe unten auf Szene abschließen und weiter.");
   }catch(e){advStatus("Fehler: "+((e&&e.message)||e),true);}
   finally{advBusy=false;advSetBusy(false);advTyping(false);}
@@ -4087,8 +4211,8 @@ async function advCompleteScene(){
     advBusy=true;advSetBusy(true);advStatus("✍️ Ich sichere die Wörter, die dir gefehlt haben …");
     try{
       const conv=adv.msgs.filter(m=>m.who!=="sys").map(m=>(m.who==="you"?"Karsten":"Local")+": "+m.en).join("\n");
-      const p="Rollenspiel-Gespraech (Englisch-Lerner Karsten, Niveau "+inputLevel()+", Situation: "+sc.goal+"):\n"+conv
-        +"\n\nNenne 3-5 nuetzliche englische Woerter/Wendungen, die Karsten in dieser Situation GEFEHLT haben oder die er gut gebrauchen koennte (Reise-/Alltag, sein Niveau). "
+      const p="Rollenspiel-Gespraech ("+LNG.name+"-Lerner Karsten, Niveau "+inputLevel()+", Situation: "+sc.goal+"):\n"+conv
+        +"\n\nNenne 3-5 nuetzliche "+LNG.adjE+" Woerter/Wendungen, die Karsten in dieser Situation GEFEHLT haben oder die er gut gebrauchen koennte (Reise-/Alltag, sein Niveau). "
         +"Antworte AUSSCHLIESSLICH als JSON-Array, nichts sonst: [{\"en\":\"...\",\"de\":\"...\",\"pron\":\"<deutsche Lautschrift>\",\"cat\":\"<Thema>\",\"ex_en\":\"<kurzer Beispielsatz>\",\"ex_de\":\"<Uebersetzung>\"}]. cat = genau eines von: Reisen, Flughafen & Flug, Hotel, Restaurant & Essen, Auto & Verkehr, Einkaufen, Smalltalk, Gesundheit, Nachrichten, Arbeit, Natur & Wetter, Alltag & Zuhause, Menschen & Familie, Gefühle & Meinung, Zeit & Zahlen, Aktionen & Verben, Beschreiben & Eigenschaften (sonst Sonstiges).";
       const res=unwrapText(await askWithTimeout(p,[],30000));
       const i=res.indexOf("["),j=res.lastIndexOf("]");
@@ -4118,7 +4242,7 @@ function advSend(){const inp=byId("advInput");if(!inp)return;const t=(inp.value|
 // Eigene Szene aus deutschem Freitext starten (z.B. „in den Alpen wandern und andere Wanderer treffen") → KI baut daraus ein englisches Rollenspiel.
 function startCustomScene(){
   const inp=byId("advCustom");if(!inp)return;const t=(inp.value||"").trim();
-  if(!t){advStatus("Beschreib kurz auf Deutsch, welche Situation du auf Englisch durchspielen willst – z.B. in den Alpen wandern und andere Wanderer treffen. 🙂");return;}
+  if(!t){advStatus("Beschreib kurz auf Deutsch, welche Situation du auf "+LNG.name+" durchspielen willst – z.B. in den Alpen wandern und andere Wanderer treffen. 🙂");return;}
   adv.custom={desc:t};adv.msgs=[];adv.canAdvance=false;adv.finished=false;save(K.adv,adv);
   inp.value="";renderAdv();toast("🎬 Eigene Szene gestartet");advTurn("",true);
 }
@@ -4179,7 +4303,7 @@ function coachInner(text){
 }
 function bindCoach(logEl){
   if(!logEl)return;
-  logEl.querySelectorAll(".spk2").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.say,"en-US")));
+  logEl.querySelectorAll(".spk2").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.say,LNG.tts)));
   logEl.querySelectorAll(".tw").forEach(s=>s.addEventListener("click",ev=>{ev.stopPropagation();const ct=s.closest(".ctext");lookupWord(s.dataset.w,ct?ct.dataset.full:"",s);}));
   logEl.querySelectorAll(".trbtn").forEach(b=>b.addEventListener("click",()=>translateMessage(b.dataset.full,b)));
 }
@@ -4196,7 +4320,7 @@ function showWordPop(word,info,sentence,anchorEl,loading){
   let left=12,top=60;
   if(anchorEl&&anchorEl.getBoundingClientRect){const r=anchorEl.getBoundingClientRect();left=Math.max(8,Math.min(r.left,(window.innerWidth||360)-pop.offsetWidth-10));top=r.bottom+6;if(top+pop.offsetHeight>(window.innerHeight||640)-8)top=Math.max(8,r.top-pop.offsetHeight-6);}
   pop.style.left=left+"px";pop.style.top=top+"px";
-  pop.querySelectorAll(".spk").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();speak(b.dataset.say,"en-US");}));
+  pop.querySelectorAll(".spk").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();speak(b.dataset.say,LNG.tts);}));
   const add=byId("wpAdd");if(add)add.addEventListener("click",()=>{const n=addMarkedWord(word,info.de,info.pron,sentence,info&&info.cat);toast(n?("🎴 In die Kartei: "+word):(word+" ist schon in deiner Kartei 👍"));closeWordPop();});
   const cl=byId("wpClose");if(cl)cl.addEventListener("click",closeWordPop);
   setTimeout(()=>document.addEventListener("mousedown",wordPopOutside,true),0);
@@ -4210,7 +4334,7 @@ async function lookupWord(word,sentence,anchorEl){
   if(!aiReady()){showWordPop(word,{de:"Übersetzung braucht die KI-Funktion (im Artefakt in der Cowork-Seitenleiste).",pron:""},sentence,anchorEl);return;}
   showWordPop(word,{de:"",pron:""},sentence,anchorEl,true);
   try{
-    const p="Englisches Wort \""+word+"\""+(sentence?(" im Satz: \""+sentence+"\""):"")+". Gib die deutsche Bedeutung GENAU in diesem Kontext, die deutsche Lautschrift (keine IPA, z.B. \"DSCHÖR-ni\") und ein passendes Reise-/Alltags-Thema. Antworte AUSSCHLIESSLICH als JSON: {\"de\":\"<deutsche Bedeutung>\",\"pron\":\"<deutsche Lautschrift>\",\"cat\":\"<Thema>\"}. cat = eines von: Reisen, Flughafen & Flug, Hotel, Restaurant & Essen, Auto & Verkehr, Einkaufen, Smalltalk, Gesundheit, Nachrichten, Arbeit, Natur & Wetter, Alltag & Zuhause (sonst Sonstiges).";
+    const p=LNG.name+"es Wort \""+word+"\""+(sentence?(" im Satz: \""+sentence+"\""):"")+". Gib die deutsche Bedeutung GENAU in diesem Kontext, die deutsche Lautschrift (keine IPA, z.B. \"DSCHÖR-ni\") und ein passendes Reise-/Alltags-Thema. Antworte AUSSCHLIESSLICH als JSON: {\"de\":\"<deutsche Bedeutung>\",\"pron\":\"<deutsche Lautschrift>\",\"cat\":\"<Thema>\"}. cat = eines von: Reisen, Flughafen & Flug, Hotel, Restaurant & Essen, Auto & Verkehr, Einkaufen, Smalltalk, Gesundheit, Nachrichten, Arbeit, Natur & Wetter, Alltag & Zuhause (sonst Sonstiges).";
     const res=unwrapText(await askWithTimeout(p,[],30000));
     const o=extractJsonObject(res);
     if(o&&o.de){info={de:String(o.de),pron:String(o.pron||""),cat:(TOPIC_SET.has(String(o.cat||"").trim())?String(o.cat).trim():"")};wordTrans[key]=info;save(K.wtr,wordTrans);}
@@ -4236,7 +4360,7 @@ async function translateMessage(text,btnEl){
   if(msgTrans[key])return;
   if(!aiReady()){box.textContent="(Übersetzung braucht die KI-Funktion)";return;}
   try{
-    const res=unwrapText(await askWithTimeout("Uebersetze diesen englischen Satz natuerlich ins Deutsche. Antworte NUR mit der deutschen Uebersetzung, ohne Anfuehrungszeichen:\n"+text,[],30000));
+    const res=unwrapText(await askWithTimeout("Uebersetze diesen "+LNG.adj+" Satz natuerlich ins Deutsche. Antworte NUR mit der deutschen Uebersetzung, ohne Anfuehrungszeichen:\n"+text,[],30000));
     const t=(res||"").trim().replace(/^["'„“]+|["'„“]+$/g,"").trim();
     if(t){msgTrans[key]=t;save(K.mtr,msgTrans);box.textContent=t;}else box.textContent="(keine Übersetzung)";
   }catch(e){box.textContent="(Fehler bei der Übersetzung)";}
@@ -4558,7 +4682,7 @@ function renderTestItem(it){
     +'<div style="margin-top:14px">'+stim+prompt+ans+'</div>'
     +'<div class="muted" style="font-size:12px;margin-top:16px;text-align:center">Kein „richtig/falsch" während des Tests – dein Ergebnis kommt am Ende. <button class="iconbtn" id="tAbort" style="margin-left:4px">Abbrechen</button></div>'
     +'</div>';
-  if(it.skill==="hören"){const play=()=>speak(it.say,"en-US");const pb=byId("tPlay");if(pb)pb.addEventListener("click",play);if(ttsAvailable())setTimeout(play,350);}
+  if(it.skill==="hören"){const play=()=>speak(it.say,LNG.tts);const pb=byId("tPlay");if(pb)pb.addEventListener("click",play);if(ttsAvailable())setTimeout(play,350);}
   if(it.type==="type"){
     const sub=()=>{const ip=byId("tInput"),v=ip?ip.value:"";recordAndAdvance(it,checkType(it,v),false,v);};
     const sb=byId("tSubmit");if(sb)sb.addEventListener("click",sub);
@@ -4620,7 +4744,7 @@ function migrateTests(){
   if(keep.length===all.length)return;
   save(TKEY.tests,keep);
   if(keep.length){ applyTestWeak(keep[keep.length-1]); }                 // Badge/Gewichtung auf das jüngste GÜLTIGE Ergebnis setzen
-  else { ["testCefr","testCefrA","testCefrR","testWeak","testFocusActive","testTheta","testDate"].forEach(k=>{delete ui[k];}); save(K.ui,ui); try{localStorage.removeItem("re_v1_testreview");}catch(e){} } // keine gültigen Tests mehr → Test-Anzeige zurücksetzen
+  else { ["testCefr","testCefrA","testCefrR","testWeak","testFocusActive","testTheta","testDate"].forEach(k=>{delete ui[k];}); save(K.ui,ui); try{localStorage.removeItem(nsKey("re_v1_testreview"));}catch(e){} } // keine gültigen Tests mehr → Test-Anzeige zurücksetzen
   updateTestBadge();
 }
 function updateTestBadge(){const b=byId("testBadge");if(!b)return;if(ui.testCefr){b.style.display="";b.textContent="📈 Test: "+ui.testCefr;}else b.style.display="none";}
@@ -4779,9 +4903,9 @@ function buildVerlaufMd(hist){
 function saveTestToObsidian(r,hist,review){
   if(!cwReady())return;
   try{
-    obsidianWrite("Reise-Englisch/Einstufungstests/Test_"+r.date+".md",buildTestMd(r,review));
-    obsidianWrite("Reise-Englisch/Einstufungstests/Letzter_Test.md",buildTestMd(r,review));
-    obsidianWrite("Reise-Englisch/Einstufungstests/_Verlauf.md",buildVerlaufMd(hist));
+    obsidianWrite(LNG.obsRoot+"/Einstufungstests/Test_"+r.date+".md",buildTestMd(r,review));
+    obsidianWrite(LNG.obsRoot+"/Einstufungstests/Letzter_Test.md",buildTestMd(r,review));
+    obsidianWrite(LNG.obsRoot+"/Einstufungstests/_Verlauf.md",buildVerlaufMd(hist));
   }catch(e){}
 }
 
@@ -4812,7 +4936,7 @@ const _cab=byId("chatAuto");if(_cab)_cab.addEventListener("change",e=>{ui.chatAu
 const _cd=byId("chatDing");if(_cd){_cd.checked=!ui.dingOff;_cd.addEventListener("change",e=>{ui.dingOff=!e.target.checked;save(K.ui,ui);if(!ui.dingOff)ding();});}
 const _bl=byId("btnLatest");if(_bl)_bl.addEventListener("click",practiceLatest);
 const _tr=byId("ttsRate"),_trv=byId("ttsRateVal");if(_tr){_tr.value=ui.ttsRate||0.9;if(_trv)_trv.textContent=(ui.ttsRate||0.9).toFixed(2)+"×";_tr.addEventListener("input",e=>{ui.ttsRate=parseFloat(e.target.value);save(K.ui,ui);if(_trv)_trv.textContent=ui.ttsRate.toFixed(2)+"×";});}
-const _tt=byId("ttsTest");if(_tt)_tt.addEventListener("click",()=>speak("Hello! This is your speaking speed.","en-US"));
+const _tt=byId("ttsTest");if(_tt)_tt.addEventListener("click",()=>speak("Hello! This is your speaking speed.",LNG.tts));
 const _sfc=byId("srcFilterClear");if(_sfc)_sfc.addEventListener("click",()=>{ui.srcFilter=null;save(K.ui,ui);buildFilterBar();refreshActive();toast("Transkript-Filter aufgehoben.");});
 /* 🌓 Erscheinungsbild (v44): auto = Systemeinstellung; dark/hell erzwingen via data-theme auf <html> */
 const THEME_LABEL={auto:"🌓 Auto",dark:"🌙 Dunkel",light:"☀️ Hell"};
@@ -4865,7 +4989,7 @@ const SENT_SEED={"t-mpwjwg7y-lyjg":{"en":"The room has a beautiful view.","de":"
    Änderung (Debounce über save()-Hook → isSyncKey), manueller Button.
    Im Cowork-Artefakt ist Sync deaktiviert (Netz dort gesperrt) – Claude schiebt den Artefakt-Stand
    von außen in den Gist. Konfig in localStorage re_v1_sync = {token,gistId,lastSync,device}. */
-const SYNC_FILE="lernstand.json";
+const SYNC_FILE=CUR_LANG==="en"?"lernstand.json":("lernstand-"+CUR_LANG+".json"); // v56: pro Sprache eine Datei im selben Gist
 const SYNC_DESC="reise-englisch-lernstand (automatischer Geräte-Sync)";
 const SYNC_DEBOUNCE_MS=20000;
 let syncCfg=load("re_v1_sync",{token:null,gistId:null,lastSync:null,device:null});
@@ -5027,6 +5151,29 @@ function renderSyncCard(){
   if(ready)ready.style.display=connected?"":"none";
   if(connected){const ls=syncCfg.lastSync?new Date(syncCfg.lastSync).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"–";syncStatus("Verbunden. Letzter Sync: "+ls);}
   else syncStatus("Noch nicht verbunden.");
+}
+/* ===== v56 Mehrsprachigkeit: statische Texte umbenennen + Sprachumschalter + EN-Bereiche ausblenden ===== */
+function relabelStatic(){
+  if(CUR_LANG==="en")return;
+  try{
+    document.title="Reise-Sprachen \u00B7 Lernkarten \u2013 "+LNG.name;
+    const EN_RX="Englisch",FLAG="\u{1F1EC}\u{1F1E7}";
+    const fix=v=>v.split(EN_RX).join(LNG.name).split(FLAG).join(LNG.flag);
+    const walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null);
+    let n;while((n=walk.nextNode())){const v=n.nodeValue;if(v&&(v.indexOf(EN_RX)>=0||v.indexOf(FLAG)>=0))n.nodeValue=fix(v);}
+    document.querySelectorAll("[title],[placeholder],[aria-label]").forEach(el=>{["title","placeholder","aria-label"].forEach(a=>{const v=el.getAttribute(a);if(v&&(v.indexOf(EN_RX)>=0||v.indexOf(FLAG)>=0))el.setAttribute(a,fix(v));});});
+  }catch(e){}
+}
+function renderLangSwitch(){
+  const ls=byId("langSwitch");if(!ls)return;
+  ls.innerHTML=Object.keys(LANGS).map(c=>'<button class="iconbtn" type="button" style="font-size:14px;padding:4px 9px;'+(c===CUR_LANG?'box-shadow:0 0 0 2px var(--accent) inset;':'opacity:.55;')+'" title="Lernsprache: '+LANGS[c].name+(c===CUR_LANG?' (aktiv)':' \u2013 zum Wechseln tippen')+'" onclick="setAppLang(\''+c+'\')">'+LANGS[c].flag+'</button>').join("");
+}
+relabelStatic();renderLangSwitch();
+if(CUR_LANG!=="en"){
+  document.querySelectorAll('.tabs [data-tab="test"],.tabs [data-tab="adventure"]').forEach(b=>{b.style.display="none";});
+  [["btnGrammar",GRAMMAR_DECK],["btnChunks",CHUNK_DECK],["btnLoadLevel",LEVEL_DECK]].forEach(pair=>{
+    if(!pair[1].length){const b=byId(pair[0]);if(b){const card=b.closest(".card");if(card)card.style.display="none";}}
+  });
 }
 /* Trigger: Start, Sichtbar-Werden, Fokus */
 if(syncOn())setTimeout(()=>doSync(false),800);
