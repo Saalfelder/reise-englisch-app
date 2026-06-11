@@ -159,6 +159,7 @@ window.addEventListener("load",function(){
   .b-you{background:var(--accent);color:#fff;border-bottom-right-radius:4px}
   .chat-sys{text-align:center;color:var(--muted);font-size:12px;margin:10px 0;font-weight:650}
   .chat-corr{max-width:82%;margin:4px 0 0;font-size:13px;color:var(--corr-ink);background:var(--corr-bg);border:1px solid var(--corr-line);border-radius:10px;padding:7px 10px}
+  .chat-corr.c1tip{background:transparent;border-style:dashed}
   .iconbtn.spk2{padding:2px 7px;font-size:12px;margin-left:6px}
   .bubble.typing{display:inline-flex;gap:5px;align-items:center;min-height:20px}
   .bubble.typing span{width:7px;height:7px;border-radius:50%;background:#d9a36a;display:inline-block;animation:typedot 1s infinite ease-in-out}
@@ -304,7 +305,7 @@ window.addEventListener("load",function(){
     <span id="langSwitch" style="display:inline-flex;gap:4px;align-self:center;margin-left:2px"></span>
     <span class="badge" id="levelBadge">Level A0</span>
     <span class="badge" id="testBadge" title="Geprüftes CEFR-Niveau aus dem Einstufungstest" style="display:none;background:var(--accent-soft);color:var(--accent-ink)"></span>
-    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 11.06. · v57</span>
+    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 11.06. · v61</span>
     <button class="iconbtn" id="themeBtn" style="font-size:12px;padding:5px 10px;margin-left:4px" title="Erscheinungsbild: Automatisch (folgt dem System), Dunkel oder Hell">🌓 Auto</button>
     <p class="sub" id="subline">Dein persönliches Lernkarten-System</p>
   </header>
@@ -461,6 +462,7 @@ window.addEventListener("load",function(){
       <div class="card pad"><h3 class="sec">Gemeisterte Vokabeln nach Thema</h3><div class="chart-box"><canvas id="cCat"></canvas></div><div class="row cw-only" style="justify-content:space-between;align-items:center;gap:8px;margin-top:8px"><span class="muted" id="topicSortInfo" style="font-size:12px"></span><button class="btn ghost" id="btnTopicSort" type="button" onclick="sortTopicsAI()" style="font-size:13px;padding:6px 10px;white-space:nowrap">🗂️ Themen sortieren</button></div></div>
     </div>
     <div class="card pad" style="margin-bottom:14px"><h3 class="sec">Lernverlauf (je Tag, letzte 14 Tage)</h3><div class="chart-box"><canvas id="cHist"></canvas></div></div>
+    <div class="card pad" style="margin-bottom:14px"><h3 class="sec">⏱️ Tägliche Übungszeit (Minuten, letzte 14 Tage)</h3><div id="timeInfo" class="muted" style="font-size:13px;margin:2px 0 8px"></div><div class="chart-box"><canvas id="cTime"></canvas></div></div>
     <div class="card pad cw-only" id="convCard" style="margin-bottom:14px">
       <div class="row" style="justify-content:space-between;align-items:baseline">
         <h3 class="sec" style="margin:0">📈 Gesprächs-Niveau (deine Antworten)</h3>
@@ -681,6 +683,8 @@ window.addEventListener("load",function(){
      "SECTION: TOOL-NUTZUNG"          v49: re_v1_usage {Tag:{mode:{ans,ok,secs,opens,retOk,retN}}},
                                       usageTick (aktive Zeit), Behaltensquote via p.lastMode, renderUsage
      "SECTION: GEMEINSAME ÜBUNGS-BAUSTEINE" autoChkHTML/delBtnHTML/bindDel, aiWarmup, ding, errStats, bumpMsgs
+     "SECTION: GERÄTE-ZEIT"           v61: history[d].dev={devId:{s,r,c}}, hStat/daySecs (max(alt, Geräte-Summe))
+     "SECTION: SYNC-EINGANG"          v61: autoMergeObsidian (Sync_Eingang.md → Merge beim Start), deltaSnapshot → Artefakt_Delta.md
      "SECTION: AKTIV-TRAINING"        v51: isActiveCard/startActive/activeRun (transient), re_v1_activemark, Schreiben DE→EN
      "Filter bar" / "Empty state"     buildFilterBar, refreshActive, noCardsMsg
      "FLASHCARDS"/"MULTIPLE CHOICE"/"WRITING"  die 3 Karten-Modi
@@ -696,10 +700,12 @@ window.addEventListener("load",function(){
                                       loadChunks/loadLevel
      "Transkript: Auto-Umbenennen"    Titel-Schema, Migration
      "Obsidian-Sicherung"             doBackup/doRestore (_Backups/Letzte_Sicherung.md), _obsQueue
-     "Conversation-Chat"              CHAT_ROLES, buildChatPrompt (kurz, JSON reply/correction/errType), chatTurn
+     "Conversation-Chat"              CHAT_ROLES, buildChatPrompt (kurz, JSON reply/correction/errType/c1), chatTurn
+                                      v59: c1Pick/youRowHTML – C1-Musterantwort unter Karstens Blase (Chat+Immersion)
+                                      v60: 🇩🇪-trbtn in der C1-Zeile (translateMessage fällt auf .c1tip zurück)
      "SECTION: FLÜSSIGKEITS-CHALLENGE" 90-Sek.-Schreibchallenge, KI-Auswertung → convLevels(mode fluency)
      "SECTION: SZENARIO-MENÜ IMMERSION" ADV_MENU (30 Szenarien) → adv.custom
-     "Immersions-Szenario"            ADV_SCENES (USA-Tour), buildAdvPrompt, advTurn, advCompleteScene
+     "Immersions-Szenario"            ADV_SCENES (USA-Tour), buildAdvPrompt (JSON …/c1/done), advTurn, advCompleteScene
      "Klick-Wörterbuch"               tippbare Coach-Wörter → Übersetzung + Karte
      "Gesprächs-Niveau"               evalConversation (CEFR-Schätzung), renderConvLevels (+Fehlertypen)
      "EINSTUFUNGSTEST"                adaptiver IRT/Rasch-Test, thetaToCefr, Obsidian-Export
@@ -2656,7 +2662,8 @@ function gradeCard(id,g){
   transWeakHit(id,g>=3);   // v50: Übersetzungs-Schwäche (Diktat) baut sich durch richtige Antworten ab
   const h=history[todayStr()]||(history[todayStr()]={reviewed:0,correct:0});
   h.reviewed++;if(g>=2)h.correct++;
-  if(lastShownTs){h.secs=(h.secs||0)+Math.min(Date.now()-lastShownTs,STUDY_CAP_MS)/1000;}
+  const dv=devBucket(h);dv.r++;if(g>=2)dv.c++;   // v61: Zählung zusätzlich pro Gerät (geräteübergreifende Tages-Summe)
+  if(lastShownTs){const addS=Math.min(Date.now()-lastShownTs,STUDY_CAP_MS)/1000;h.secs=(h.secs||0)+addS;dv.s+=addS;}
   lastShownTs=Date.now();
   save(K.hist,history);
 }
@@ -2670,6 +2677,7 @@ function markKnown(id){
   if(!p.masteredOn)p.masteredOn=todayStr();
   p.lastMode=usageModeKey();p.mt=Date.now();usageAns(p.lastMode,true); // v49: zählt als Nutzung (kein Retention-Eintrag); mt für Sync (v53)
   const h=history[todayStr()]||(history[todayStr()]={reviewed:0,correct:0});h.reviewed++;h.correct++;
+  const dv=devBucket(h);dv.r++;dv.c++; // v61
   save(K.prog,progress);save(K.hist,history);
 }
 
@@ -2803,10 +2811,19 @@ function speak(text,lang,voiceName,onend){
 }
 
 /* ============================ Streak & accuracy ============================ */
-function streak(){let s=0,d=todayStr();if(!history[d]||history[d].reviewed===0)d=addDays(d,-1);while(history[d]&&history[d].reviewed>0){s++;d=addDays(d,-1);}return s;}
+/* ===== SECTION: GERÄTE-ZEIT (v61) – history[d].dev = {geräteId:{s,r,c}}: Sekunden/Karten/richtig PRO GERÄT.
+   Grund: der Gist-Merge nimmt bei Zahlen das MAXIMUM (syncMaxNum) – übt man am selben Tag auf iPhone UND
+   im Artefakt, ging die kleinere Zeit verloren. Pro-Gerät-Buckets werden beim Merge je Gerät gemaxt (korrekt,
+   da monoton wachsend) und für die ANZEIGE summiert. hStat = max(Altfeld, Geräte-Summe) → alte Tage bleiben gültig. */
+function devId(){try{return (syncCfg&&syncCfg.device)||"local";}catch(e){return "local";}} // syncCfg wird beim Init angelegt (TDZ-sicher)
+function devBucket(h){const d=h.dev||(h.dev={});return d[devId()]||(d[devId()]={s:0,r:0,c:0});}
+function devSum(h,f){let s=0;if(h&&h.dev)Object.keys(h.dev).forEach(k=>{const d=h.dev[k];s+=(d&&d[f])||0;});return s;}
+function hStat(h){if(!h)return {r:0,c:0,s:0};return {r:Math.max(h.reviewed||0,devSum(h,"r")),c:Math.max(h.correct||0,devSum(h,"c")),s:Math.max(h.secs||0,devSum(h,"s"))};}
+function daySecs(d){return hStat(history[d]).s;}
+function streak(){let s=0,d=todayStr();if(!history[d]||hStat(history[d]).r===0)d=addDays(d,-1);while(history[d]&&hStat(history[d]).r>0){s++;d=addDays(d,-1);}return s;}
 function overallAcc(){let c=0,w=0;Object.values(progress).forEach(p=>{c+=p.correct||0;w+=p.wrong||0;});const t=c+w;return t?Math.round(100*c/t):null;}
-function studyDays(){return Object.keys(history).filter(d=>history[d]&&history[d].reviewed>0).length;}
-function studySeconds(){let s=0;Object.values(history).forEach(h=>{s+=(h&&h.secs)||0;});return s;}
+function studyDays(){return Object.keys(history).filter(d=>history[d]&&hStat(history[d]).r>0).length;}
+function studySeconds(){let s=0;Object.values(history).forEach(h=>{s+=hStat(h).s;});return s;}
 function fmtDuration(sec){sec=Math.round(sec);if(sec<60)return sec+" s";if(sec<3600)return Math.round(sec/60)+" min";const h=Math.floor(sec/3600),m=Math.round((sec%3600)/60);return m?h+" h "+m+" min":h+" h";}
 
 /* ============================ Navigation ============================ */
@@ -3553,17 +3570,17 @@ function renderNow(){
   const cards=allCards().filter(c=>!lockedGrammar(c));
   const due=cards.filter(c=>{const p=progress[c.id];return p&&p.seen&&p.due<=todayStr();}).length;
   const news=cards.filter(c=>statusOf(c.id)==="neu").length;
-  const h=history[todayStr()]||{};
+  const hs=hStat(history[todayStr()]);
   btn.textContent=due>0?("▶️ Jetzt üben · "+due+" fällig"):(news>0?"▶️ Jetzt üben · neue Wörter":"▶️ Jetzt üben");
-  btn.classList.toggle("pulse",!(h.reviewed>0));
-  if(info)info.textContent=h.reviewed?("Heute schon "+h.reviewed+" Karten geübt – stark! Weiter geht's."):"Ein Klick und los – dein Tagespensum wartet.";
+  btn.classList.toggle("pulse",!(hs.r>0));
+  if(info)info.textContent=hs.r?("Heute schon "+hs.r+" Karten geübt – stark! Weiter geht's."):"Ein Klick und los – dein Tagespensum wartet.";
   btn.onclick=()=>{if(due>0)quickStart("due");else if(news>0)quickStart("new");else quickStart("all");};
 }
 const QUEST_DEFS=[
- {ic:"📇",label:"20 Karten üben",goal:20,cur:h=>h.reviewed||0},
- {ic:"✅",label:"15 richtige Antworten",goal:15,cur:h=>h.correct||0},
+ {ic:"📇",label:"20 Karten üben",goal:20,cur:h=>hStat(h).r},
+ {ic:"✅",label:"15 richtige Antworten",goal:15,cur:h=>hStat(h).c},
  {ic:"💬",label:"3 Antworten in Chat / Immersion / Challenge",goal:3,cur:h=>h.msgs||0},
- {ic:"⏱️",label:"10 Minuten Übungszeit",goal:10,cur:h=>Math.floor((h.secs||0)/60)}
+ {ic:"⏱️",label:"10 Minuten Übungszeit",goal:10,cur:h=>Math.floor(hStat(h).s/60)}
 ];
 function renderQuests(){
   const body=byId("questBody");if(!body)return;
@@ -3575,7 +3592,7 @@ function renderQuests(){
   }).join("");
   if(allDone&&ui.questDay!==todayStr()){ui.questDay=todayStr();save(K.ui,ui);confetti();toast("🎉 Alle Tages-Quests geschafft!");}
 }
-function weekStats(off){let rev=0,cor=0,secs=0;for(let i=off*7;i<off*7+7;i++){const d=addDays(todayStr(),-i),h=history[d];if(h){rev+=h.reviewed||0;cor+=h.correct||0;secs+=(h.secs||0);}}return {rev:rev,acc:rev?Math.round(100*cor/rev):null,secs:secs};}
+function weekStats(off){let rev=0,cor=0,secs=0;for(let i=off*7;i<off*7+7;i++){const d=addDays(todayStr(),-i),h=history[d];if(h){const t=hStat(h);rev+=t.r;cor+=t.c;secs+=t.s;}}return {rev:rev,acc:rev?Math.round(100*cor/rev):null,secs:secs};}
 function masteredInWeek(off){let n=0;Object.keys(progress).forEach(id=>{const p=progress[id];if(p&&p.masteredOn){const d=daysBetween(p.masteredOn,todayStr());if(d>=off*7&&d<off*7+7)n++;}});return n;}
 function trendArrow(a,b){if(a===null||b===null)return "";return a>b?" ↑":(a<b?" ↓":" →");}
 function renderWeek(){
@@ -3610,8 +3627,12 @@ function renderDashboard(){
   drawDoughnut("cStatus","status",["neu","schwach","gut","sehr-gut"].map(k=>STATUS_LABEL[k]),[st.neu,st.schwach,st.gut,st["sehr-gut"]],["#94a3b8","#ef4444","#f59e0b","#22c55e"]);
   const catEntries=Object.keys(cat).map(k=>[k,cat[k]]).sort((a,b)=>{const as=a[0]===TOPIC_CATCHALL?1:0,bs=b[0]===TOPIC_CATCHALL?1:0;if(as!==bs)return as-bs;return (b[1]-a[1])||a[0].localeCompare(b[0],"de");}); // nach Anzahl absteigend, „Sonstiges" ans Ende
   drawBar("cCat","cat",catEntries.map(e=>e[0]),catEntries.map(e=>e[1]));
-  const labels=[],data=[],dataMsgs=[];for(let i=13;i>=0;i--){const d=addDays(todayStr(),-i);labels.push(d.slice(5));data.push(history[d]?history[d].reviewed:0);dataMsgs.push(history[d]?(history[d].msgs||0):0);} // v52: msgs = Chat/Abenteuer/Immersion-Antworten
+  const labels=[],data=[],dataMsgs=[];for(let i=13;i>=0;i--){const d=addDays(todayStr(),-i);labels.push(d.slice(5));data.push(hStat(history[d]).r);dataMsgs.push(history[d]?(history[d].msgs||0):0);} // v52: msgs = Chat/Abenteuer/Immersion-Antworten
   drawLine("cHist","hist",labels,data,dataMsgs,"Geübte Karten","Chat-Nachrichten");
+  // v61: tägliche Übungszeit (alle Geräte) – Balken in Minuten + Heute-/Durchschnitts-Zeile
+  const tData=[];let tSum=0;for(let i=13;i>=0;i--){const d=addDays(todayStr(),-i);const m=daySecs(d)/60;tData.push(Math.round(m*10)/10);tSum+=m;}
+  drawBar("cTime","time",labels.slice(),tData);
+  const tEl=byId("timeInfo");if(tEl)tEl.innerHTML="Heute: <b>"+fmtDuration(daySecs(todayStr()))+"</b> · Ø letzte 14 Tage: <b>"+fmtDuration(tSum*60/14)+"</b><br><span style=\"font-size:12px\">Summe über alle Geräte (iPhone + Artefakt), Stand des letzten Syncs.</span>";
   renderConvLevels();
   renderUsage();
   const lv=currentLevel(),nx=nextLevel(),m=masteredCount();
@@ -3813,11 +3834,20 @@ const WORD_PROMPT="Du bist ein "+LNG.name+"-Lehrer fuer einen deutschen Anfaenge
   +"en = das "+LNG.adjE+" Wort genau wie vorgegeben; de = einfache deutsche Uebersetzung (bei mehreren Bedeutungen die haeufigste, ggf. 1-2 mit / getrennt); "
   +"pron = deutsche Lautschrift (z. B. \"geet\"). KEINE Beispielsaetze, KEINE weiteren Felder, KEIN Text drumherum.";
 // askClaude mit Zeitlimit, damit ein haengender KI-Aufruf NICHT die ganze Vervollstaendigung blockiert.
-function askWithTimeout(prompt,data,ms){
+function askOnce(prompt,data,ms){
   return Promise.race([
     Promise.resolve().then(function(){return window.cowork.askClaude(prompt,data);}),
     new Promise(function(_,rej){setTimeout(function(){rej(new Error("KI-Zeitlimit"));},ms||30000);})
   ]);
+}
+// v58: Bei Zeitlimit automatisch EIN zweiter Versuch mit laengerem Limit (x1.5) – ein einzelner
+// haengender Haiku-Aufruf bricht so nicht mehr sofort die Immersion/den Chat ab.
+async function askWithTimeout(prompt,data,ms){
+  try{return await askOnce(prompt,data,ms);}
+  catch(e){
+    if(!(e&&e.message==="KI-Zeitlimit"))throw e;
+    return await askOnce(prompt,data,Math.round((ms||30000)*1.5));
+  }
 }
 async function translateWordBatch(words){
   if(!words||!words.length)return [];
@@ -4147,6 +4177,7 @@ async function doBackup(silent){
     const note="---\ntyp: backup\ndatum: "+todayStr()+"\nvokabeln: "+allCards().length+"\ngemeistert: "+masteredCount()+"\nlevel: "+currentLevel().code+"\n---\n\n# 💾 "+LNG.obsRoot+" – Sicherung\nKompletter Lernstand (Vokabeln + FSRS-Fortschritt + Statistik). Wiederherstellen: im Artefakt unter „Verwalten“ → „Aus Obsidian wiederherstellen“.\n\n```json\n"+JSON.stringify(snap)+"\n```\n";
     await obsidianWrite(BACKUP_LATEST,note);
     await obsidianWrite(BACKUP_DIR+"/Backup_"+todayStr()+".md",note);
+    await obsidianWrite(BACKUP_DIR+"/Artefakt_Delta.md","---\ntyp: sync-delta\nstand: "+new Date().toISOString()+"\n---\n\n# 📤 Artefakt-Delta (für Gist-Sync durch Claude)\n\n```json\n"+JSON.stringify(deltaSnapshot())+"\n```\n"); // v61
     ui.lastBackup=todayStr();save(K.ui,ui);
     if(!silent)backupMsg("✅ In Obsidian gesichert: "+allCards().length+" Vokabeln, Level "+currentLevel().code+".");
     return true;
@@ -4177,6 +4208,46 @@ async function doRestore(){
   finally{backupBusy(false);}
 }
 
+/* ===== SECTION: SYNC-EINGANG (v61) – Obsidian als Brücke zum Gist =====================================
+   Das Artefakt-Sandbox kann GitHub nicht erreichen (fetch blockiert, web_fetch-MCP liefert für den privaten
+   Gist nichts). Brücke: Claude legt den Gist-Stand (oder ein Delta) als Sync-Format-JSON in
+   _Backups/Sync_Eingang.md ab; das Artefakt merged ihn beim Start automatisch (syncMergeData, nie blind
+   überschreiben) und löscht die Datei danach. Rückweg: doBackup schreibt zusätzlich _Backups/Artefakt_Delta.md
+   (kleiner Auszug: history+usage komplett + progress der letzten 3 Tage), den Claude in den Gist mergen kann. */
+const SYNC_INBOX=BACKUP_DIR+"/Sync_Eingang.md";
+function snapTs(o){if(!o)return 0;const t=o.ts;if(typeof t==="number")return t;if(typeof t==="string"){const p=Date.parse(t);return isNaN(p)?0:p;}return 0;}
+function extractStates(raw){ // alle parsebaren JSON-Blöcke (```json-Fences; Fallback: erstes { bis letztes })
+  const out=[];if(!raw)return out;
+  String(raw).replace(/```json([\s\S]*?)```/gi,(m,body)=>{try{const o=JSON.parse(body.trim());if(o)out.push(o);}catch(e){}return m;});
+  if(!out.length){const t=String(raw),i=t.indexOf("{"),j=t.lastIndexOf("}");if(i>=0&&j>i){try{out.push(JSON.parse(t.slice(i,j+1)));}catch(e){}}}
+  return out;
+}
+async function autoMergeObsidian(){ // nur Sync-Format ({ts,device,data:{…}}); Snapshots (v2) bleiben dem manuellen ♻️ vorbehalten
+  if(!cwReady())return false;
+  let did=false;
+  try{
+    const raw=unwrapText(await window.cowork.callMcpTool("mcp__obsidian__obsidian_get_file_contents",{filepath:SYNC_INBOX}));
+    extractStates(raw).forEach(o=>{
+      const ext=o&&o.data;if(!ext||(!ext.progress&&!ext.history))return;
+      const ts=snapTs(o);if(ts&&ts<=(ui.lastObsMerge||0))return; // schon übernommen
+      syncApply(syncMergeData(syncSnapshotData(),ext));
+      if(ts){ui.lastObsMerge=ts;}
+      did=true;
+    });
+    if(did){
+      save(K.ui,ui);ensureProgress();refreshAllViews();syncLevel(false);
+      toast("🔄 Neuer Lernstand (iPhone/Gist) übernommen");
+      try{await window.cowork.callMcpTool("mcp__obsidian__obsidian_delete_file",{filepath:SYNC_INBOX,confirm:true});}catch(e){}
+    }
+  }catch(e){}
+  return did;
+}
+function deltaSnapshot(){ // kleiner Sync-Auszug fürs Zurückspielen in den Gist
+  const ref=Date.now()-3*86400000,dp={};
+  Object.keys(progress).forEach(id=>{const p=progress[id];if(p&&(p.mt||0)>=ref)dp[id]=p;});
+  return {v:1,ts:Date.now(),device:devId(),data:{progress:dp,history,usage}};
+}
+
 /* ============================ Conversation-Chat (Rollenspiel, KI) ============================ */
 const CHAT_ROLES={"Reisen":"Einheimische, die dir bei deiner Reise hilft","Flughafen & Flug":"Flughafen-Mitarbeiterin am Check-in","Hotel":"Hotel-Rezeptionistin","Restaurant & Essen":"Kellner in einem Restaurant","Auto & Verkehr":"hilfsbereiter Passant (Wegbeschreibung)","Einkaufen":"Verkäuferin in einem Geschäft","Smalltalk":"freundliche fremde Person beim Smalltalk","Gesundheit":"Apothekerin","Nachrichten":"Gesprächspartnerin über aktuelle Nachrichten","Arbeit":"Kollegin im Büro","Natur & Wetter":"Wanderführerin im Nationalpark","Alltag & Zuhause":"freundliche Nachbarin","Sonstiges":"freundliche Gesprächspartnerin"};
 function roleFor(cat){return CHAT_ROLES[cat]||("freundliche Gesprächspartnerin in der Situation '"+cat+"'");}
@@ -4195,7 +4266,8 @@ function buildChatPrompt(userMsg,opening){
    +"Bleib warm in der Rolle, bau auf seiner Antwort auf, brich nie ab. "
    +(known?("Nutze gern: "+known+". "):"")
    +"correction: nur wenn noetig, kurz deutsch (Tipp + bessere Version), sonst leer. errType: Hauptfehlertyp (Grammatik|Wortschatz|Wortstellung|Rechtschreibung) oder leer. "
-   +"NUR JSON: {\"reply\":\"...\",\"correction\":\"...\",\"errType\":\"...\"}. "
+   +(userMsg?("c1: Karstens letzte Aeusserung, wie ein C1-Sprecher sie natuerlich-idiomatisch auf "+LNG.name+" sagen wuerde (1 Satz, gleicher Inhalt). "):"")
+   +"NUR JSON: {\"reply\":\"...\",\"correction\":\"...\",\"errType\":\"...\""+(userMsg?",\"c1\":\"...\"":"")+"}. "
    +(opening?"Beginne: begruesse in deiner Rolle + 1 Frage. ":"")
    +(hist?("\nVerlauf:\n"+hist):"")
    +(userMsg?("\nKarsten: "+userMsg):"");
@@ -4246,7 +4318,7 @@ async function chatTurn(userMsg,opening){
   try{
     const res=unwrapText(await askWithTimeout(buildChatPrompt(userMsg,opening),[],30000));
     const obj=extractJsonObject(res)||{reply:(res||"").trim()||"Let's try again. 🙂",correction:""};
-    if(userMsg){for(let k=chat.msgs.length-1;k>=0;k--){if(chat.msgs[k].who==="you"){chat.msgs[k].corr=(obj.correction||"").trim();usageAns("chat",!chat.msgs[k].corr);if(chat.msgs[k].corr){chat.msgs[k].errT=(obj.errType||"").trim();bumpErrStat(chat.msgs[k].errT);}break;}}}
+    if(userMsg){for(let k=chat.msgs.length-1;k>=0;k--){if(chat.msgs[k].who==="you"){chat.msgs[k].corr=(obj.correction||"").trim();usageAns("chat",!chat.msgs[k].corr);if(chat.msgs[k].corr){chat.msgs[k].errT=(obj.errType||"").trim();bumpErrStat(chat.msgs[k].errT);}chat.msgs[k].c1=c1Pick(obj.c1,userMsg);break;}}}
     chat.msgs.push({who:"coach",en:(obj.reply||"").trim()});
     if(chat.msgs.length>120)chat.msgs=chat.msgs.slice(-120);
     save(K.chat,chat);renderChat();ding();
@@ -4269,7 +4341,7 @@ function renderChat(){
       log.innerHTML=chat.msgs.map(m=>{
         if(m.who==="sys")return '<div class="chat-sys">— '+esc(m.text)+' —</div>';
         if(m.who==="coach")return '<div class="chat-row coach"><div class="bubble b-coach">'+coachInner(m.en)+'</div></div>';
-        return '<div class="chat-row you"><div class="bubble b-you">'+esc(m.en)+'</div>'+(m.corr?'<div class="chat-corr">💡 '+(m.errT?'<b>['+esc(m.errT)+']</b> ':'')+esc(m.corr)+'</div>':'')+'</div>';
+        return youRowHTML(m);
       }).join("");
       bindCoach(log);
       log.scrollTop=log.scrollHeight;
@@ -4405,7 +4477,8 @@ function buildAdvPrompt(userMsg,opening){
    +"Natuerliches, idiomatisches "+LNG.name+" ("+lvl+"), wie eine echte Person, max. 1-2 Saetze + 1 Frage. Bleib strikt in der Rolle, brich nie ab. "
    +"done=true wenn er das Szenen-Ziel erkennbar erreicht hat, sonst false. "
    +"correction: nur bei echtem Missverstaendnis, kurz deutsch, sonst leer. errType: Hauptfehlertyp (Grammatik|Wortschatz|Wortstellung|Rechtschreibung) oder leer. "
-   +"NUR JSON: {\"reply\":\"...\",\"correction\":\"...\",\"errType\":\"...\",\"done\":false}. "
+   +(userMsg?("c1: Karstens letzte Aeusserung, wie ein C1-Sprecher sie natuerlich-idiomatisch auf "+LNG.name+" sagen wuerde (1 Satz, gleicher Inhalt). "):"")
+   +"NUR JSON: {\"reply\":\"...\",\"correction\":\"...\",\"errType\":\"...\""+(userMsg?",\"c1\":\"...\"":"")+",\"done\":false}. "
    +(opening?"Beginne: eroeffne die Szene in deiner Rolle und bring ihn ins Reden. ":"")
    +(hist?("\nVerlauf:\n"+hist):"")
    +(userMsg?("\nKarsten: "+userMsg):"");
@@ -4417,15 +4490,30 @@ async function advTurn(userMsg,opening){
   try{
     const res=unwrapText(await askWithTimeout(buildAdvPrompt(userMsg,opening),[],30000));
     const obj=extractJsonObject(res)||{reply:(res||"").trim()||"Sorry, could you say that again?",correction:"",done:false};
-    if(userMsg){for(let k=adv.msgs.length-1;k>=0;k--){if(adv.msgs[k].who==="you"){adv.msgs[k].corr=(obj.correction||"").trim();usageAns("adventure",!adv.msgs[k].corr);if(adv.msgs[k].corr){adv.msgs[k].errT=(obj.errType||"").trim();bumpErrStat(adv.msgs[k].errT);}break;}}}
+    if(userMsg){for(let k=adv.msgs.length-1;k>=0;k--){if(adv.msgs[k].who==="you"){adv.msgs[k].corr=(obj.correction||"").trim();usageAns("adventure",!adv.msgs[k].corr);if(adv.msgs[k].corr){adv.msgs[k].errT=(obj.errType||"").trim();bumpErrStat(adv.msgs[k].errT);}adv.msgs[k].c1=c1Pick(obj.c1,userMsg);break;}}}
     adv.msgs.push({who:"coach",en:(obj.reply||"").trim()});
     if(adv.msgs.length>120)adv.msgs=adv.msgs.slice(-120);
     adv.canAdvance=!!obj.done;
     save(K.adv,adv);renderAdv();ding();
     if(ui.chatAuto&&ttsAvailable())speak(obj.reply,LNG.tts);
     if(obj.done)advStatus("🎯 Ziel erreicht! Tippe unten auf Szene abschließen und weiter.");
-  }catch(e){advStatus("Fehler: "+((e&&e.message)||e),true);}
+  }catch(e){
+    const m=(e&&e.message)||String(e);
+    if(m==="KI-Zeitlimit")advRetryOffer(userMsg,opening);
+    else advStatus("Fehler: "+m,true);
+  }
   finally{advBusy=false;advSetBusy(false);advTyping(false);}
+}
+// v58: Bei KI-Zeitlimit geht nichts verloren – Hinweis + Knopf, der denselben Zug erneut anstoesst.
+function advRetryOffer(userMsg,opening){
+  const el=byId("advStatus");if(!el)return;
+  el.style.color="var(--bad)";
+  el.textContent="⏱️ Die KI hat zu lange gebraucht – deine Nachricht ist gespeichert. ";
+  const b=document.createElement("button");
+  b.className="btn";b.style.cssText="font-size:13px;padding:6px 10px;margin-left:6px";
+  b.textContent="↻ Nochmal versuchen";
+  b.addEventListener("click",function(){advStatus("");advTurn(userMsg,opening);});
+  el.appendChild(b);
 }
 function advAddCards(words){
   const existing=new Set(allCards().map(c=>norm2(c.en)));let added=0;
@@ -4491,7 +4579,7 @@ function renderAdv(){
       log.innerHTML=adv.msgs.map(m=>{
         if(m.who==="sys")return '<div class="chat-sys">— '+esc(m.text)+' —</div>';
         if(m.who==="coach")return '<div class="chat-row coach"><div class="bubble b-coach">'+coachInner(m.en)+'</div></div>';
-        return '<div class="chat-row you"><div class="bubble b-you">'+esc(m.en)+'</div>'+(m.corr?'<div class="chat-corr">💡 '+(m.errT?'<b>['+esc(m.errT)+']</b> ':'')+esc(m.corr)+'</div>':'')+'</div>';
+        return youRowHTML(m);
       }).join("");
       bindCoach(log);
       log.scrollTop=log.scrollHeight;
@@ -4524,6 +4612,19 @@ function tokWords(text){
     if(!m)return esc(tok);
     return esc(m[1])+'<span class="tw" data-w="'+esc(m[2])+'">'+esc(m[2])+'</span>'+esc(m[3]);
   }).join("");
+}
+/* v59: C1-Musterantwort unter Karstens Nachricht (Chat + Immersion). c1Pick verwirft die KI-C1-Version,
+   wenn sie (normalisiert) identisch mit seiner eigenen Aeusserung ist – dann gibt es nichts zu lernen. */
+function c1Pick(c1,userMsg){
+  const n=s=>String(s||"").toLowerCase().replace(/['’]/g,"").replace(/[\s.!?,;:“”"-]+/g," ").trim();
+  const v=String(c1||"").trim();
+  return (v&&n(v)!==n(userMsg))?v:"";
+}
+function youRowHTML(m){
+  let extra="";
+  if(m.corr)extra+='<div class="chat-corr">💡 '+(m.errT?'<b>['+esc(m.errT)+']</b> ':'')+esc(m.corr)+'</div>';
+  if(m.c1)extra+='<div class="chat-corr c1tip">🎓 <b>C1:</b> '+esc(m.c1)+' <button class="iconbtn spk spk2" data-say="'+esc(m.c1)+'" title="anhören">🔊</button><button class="iconbtn trbtn" data-full="'+esc(m.c1)+'" title="deutsche Übersetzung ein-/ausblenden">🇩🇪</button></div>';
+  return '<div class="chat-row you"><div class="bubble b-you">'+esc(m.en)+'</div>'+extra+'</div>';
 }
 function coachInner(text){
   return '<div class="ctext" data-full="'+esc(text)+'">'+tokWords(text)+'</div>'
@@ -4580,7 +4681,7 @@ function addMarkedWord(en,de,pron,ex_en,cat){
   save(K.user,userCards);ensureProgress();return 1;
 }
 async function translateMessage(text,btnEl){
-  const bubble=btnEl&&btnEl.closest?btnEl.closest(".bubble"):null;
+  const bubble=btnEl&&btnEl.closest?(btnEl.closest(".bubble")||btnEl.closest(".c1tip")):null; // v60: 🇩🇪 auch in der C1-Zeile
   const ex=bubble&&bubble.querySelector?bubble.querySelector(".msgtr"):null;
   if(ex){ex.remove();return;}
   const key=norm2(text).slice(0,90);
@@ -5188,7 +5289,7 @@ if(!cwReady()){
   document.body.classList.add("no-cw"); // v54: Artefakt-only-Elemente ausblenden (Chat/Immersion-Tabs, Script-Loader, Obsidian-Karte, KI-Knöpfe)
   if(location.protocol!=="https:")scriptMsg("ℹ️ Tipp: Öffne dieses Artefakt in der Cowork-Seitenleiste, dann kannst du Transkripte automatisch laden."); // Hinweis nur in der Datei-Kopie, nicht in der Web-App
 }
-if(cwReady()&&ui.lastBackup!==todayStr())doBackup(true);
+if(cwReady()){(async()=>{const m=await autoMergeObsidian();if(m||ui.lastBackup!==todayStr())doBackup(true);})();} // v61: erst Sync-Eingang mergen, dann (Tages-)Backup des gemergten Standes
 
 /* ===== v55: Filter-Kompakt-Zeile (Mobil) – Zusammenfassung der aktiven Filter, Details eingeklappt ===== */
 function fbSummaryText(){
