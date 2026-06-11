@@ -305,7 +305,7 @@ window.addEventListener("load",function(){
     <span id="langSwitch" style="display:inline-flex;gap:4px;align-self:center;margin-left:2px"></span>
     <span class="badge" id="levelBadge">Level A0</span>
     <span class="badge" id="testBadge" title="Geprüftes CEFR-Niveau aus dem Einstufungstest" style="display:none;background:var(--accent-soft);color:var(--accent-ink)"></span>
-    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 11.06. · v61</span>
+    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 11.06. · v62</span>
     <button class="iconbtn" id="themeBtn" style="font-size:12px;padding:5px 10px;margin-left:4px" title="Erscheinungsbild: Automatisch (folgt dem System), Dunkel oder Hell">🌓 Auto</button>
     <p class="sub" id="subline">Dein persönliches Lernkarten-System</p>
   </header>
@@ -2820,10 +2820,15 @@ function devBucket(h){const d=h.dev||(h.dev={});return d[devId()]||(d[devId()]={
 function devSum(h,f){let s=0;if(h&&h.dev)Object.keys(h.dev).forEach(k=>{const d=h.dev[k];s+=(d&&d[f])||0;});return s;}
 function hStat(h){if(!h)return {r:0,c:0,s:0};return {r:Math.max(h.reviewed||0,devSum(h,"r")),c:Math.max(h.correct||0,devSum(h,"c")),s:Math.max(h.secs||0,devSum(h,"s"))};}
 function daySecs(d){return hStat(history[d]).s;}
+/* v62: „echte" Tages-Lernzeit = max(Karten-Zeit aus history, aktive Zeit aller Lern-Modi aus usage).
+   Grund: history.secs zählt NUR gradeCard (Karten); Immersion/Chat/Hören-Zeit steckt im usage-Tracking (v49).
+   max statt Summe, weil sich beide Quellen für Karten-Modi überlappen würden. */
+function usageLearnSecs(d){const day=usage[d];if(!day)return 0;let s=0;Object.keys(day).forEach(m=>{if(m==="dashboard"||m==="manage"||m==="mastered")return;s+=(day[m]&&day[m].secs)||0;});return s;}
+function dayLearnSecs(d){return Math.max(daySecs(d),usageLearnSecs(d));}
 function streak(){let s=0,d=todayStr();if(!history[d]||hStat(history[d]).r===0)d=addDays(d,-1);while(history[d]&&hStat(history[d]).r>0){s++;d=addDays(d,-1);}return s;}
 function overallAcc(){let c=0,w=0;Object.values(progress).forEach(p=>{c+=p.correct||0;w+=p.wrong||0;});const t=c+w;return t?Math.round(100*c/t):null;}
 function studyDays(){return Object.keys(history).filter(d=>history[d]&&hStat(history[d]).r>0).length;}
-function studySeconds(){let s=0;Object.values(history).forEach(h=>{s+=hStat(h).s;});return s;}
+function studySeconds(){const days=new Set(Object.keys(history).concat(Object.keys(usage)));let s=0;days.forEach(d=>{s+=dayLearnSecs(d);});return s;} // v62: inkl. Immersion/Chat/Hören
 function fmtDuration(sec){sec=Math.round(sec);if(sec<60)return sec+" s";if(sec<3600)return Math.round(sec/60)+" min";const h=Math.floor(sec/3600),m=Math.round((sec%3600)/60);return m?h+" h "+m+" min":h+" h";}
 
 /* ============================ Navigation ============================ */
@@ -3580,7 +3585,7 @@ const QUEST_DEFS=[
  {ic:"📇",label:"20 Karten üben",goal:20,cur:h=>hStat(h).r},
  {ic:"✅",label:"15 richtige Antworten",goal:15,cur:h=>hStat(h).c},
  {ic:"💬",label:"3 Antworten in Chat / Immersion / Challenge",goal:3,cur:h=>h.msgs||0},
- {ic:"⏱️",label:"10 Minuten Übungszeit",goal:10,cur:h=>Math.floor(hStat(h).s/60)}
+ {ic:"⏱️",label:"10 Minuten Übungszeit",goal:10,cur:h=>Math.floor(dayLearnSecs(todayStr())/60)}
 ];
 function renderQuests(){
   const body=byId("questBody");if(!body)return;
@@ -3592,7 +3597,7 @@ function renderQuests(){
   }).join("");
   if(allDone&&ui.questDay!==todayStr()){ui.questDay=todayStr();save(K.ui,ui);confetti();toast("🎉 Alle Tages-Quests geschafft!");}
 }
-function weekStats(off){let rev=0,cor=0,secs=0;for(let i=off*7;i<off*7+7;i++){const d=addDays(todayStr(),-i),h=history[d];if(h){const t=hStat(h);rev+=t.r;cor+=t.c;secs+=t.s;}}return {rev:rev,acc:rev?Math.round(100*cor/rev):null,secs:secs};}
+function weekStats(off){let rev=0,cor=0,secs=0;for(let i=off*7;i<off*7+7;i++){const d=addDays(todayStr(),-i),h=history[d];if(h){const t=hStat(h);rev+=t.r;cor+=t.c;}secs+=dayLearnSecs(d);}return {rev:rev,acc:rev?Math.round(100*cor/rev):null,secs:secs};}
 function masteredInWeek(off){let n=0;Object.keys(progress).forEach(id=>{const p=progress[id];if(p&&p.masteredOn){const d=daysBetween(p.masteredOn,todayStr());if(d>=off*7&&d<off*7+7)n++;}});return n;}
 function trendArrow(a,b){if(a===null||b===null)return "";return a>b?" ↑":(a<b?" ↓":" →");}
 function renderWeek(){
@@ -3630,9 +3635,9 @@ function renderDashboard(){
   const labels=[],data=[],dataMsgs=[];for(let i=13;i>=0;i--){const d=addDays(todayStr(),-i);labels.push(d.slice(5));data.push(hStat(history[d]).r);dataMsgs.push(history[d]?(history[d].msgs||0):0);} // v52: msgs = Chat/Abenteuer/Immersion-Antworten
   drawLine("cHist","hist",labels,data,dataMsgs,"Geübte Karten","Chat-Nachrichten");
   // v61: tägliche Übungszeit (alle Geräte) – Balken in Minuten + Heute-/Durchschnitts-Zeile
-  const tData=[];let tSum=0;for(let i=13;i>=0;i--){const d=addDays(todayStr(),-i);const m=daySecs(d)/60;tData.push(Math.round(m*10)/10);tSum+=m;}
+  const tData=[];let tSum=0;for(let i=13;i>=0;i--){const d=addDays(todayStr(),-i);const m=dayLearnSecs(d)/60;tData.push(Math.round(m*10)/10);tSum+=m;}
   drawBar("cTime","time",labels.slice(),tData);
-  const tEl=byId("timeInfo");if(tEl)tEl.innerHTML="Heute: <b>"+fmtDuration(daySecs(todayStr()))+"</b> · Ø letzte 14 Tage: <b>"+fmtDuration(tSum*60/14)+"</b><br><span style=\"font-size:12px\">Summe über alle Geräte (iPhone + Artefakt), Stand des letzten Syncs.</span>";
+  const tEl=byId("timeInfo");if(tEl)tEl.innerHTML="Heute: <b>"+fmtDuration(dayLearnSecs(todayStr()))+"</b> · Ø letzte 14 Tage: <b>"+fmtDuration(tSum*60/14)+"</b><br><span style=\"font-size:12px\">Alle Geräte (iPhone + Artefakt, Stand des letzten Syncs) und alle Modi inkl. Immersion/Chat/Hören.</span>";
   renderConvLevels();
   renderUsage();
   const lv=currentLevel(),nx=nextLevel(),m=masteredCount();
