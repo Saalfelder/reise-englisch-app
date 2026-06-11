@@ -2312,7 +2312,7 @@ function syncLevel(celebrate){
 }
 
 /* ============================ Card model ============================ */
-function allCards(){const hide=new Set(hidden),del=new Set(deleted);return [...DEFAULT_DECK,...userCards].filter(c=>!hide.has(c.id)&&!del.has(c.id)).map(c=>overrides[c.id]?Object.assign({},c,overrides[c.id]):c);}
+function allCards(){const hide=new Set(hidden),del=new Set(deleted);return [...(CUR_LANG==="en"?DEFAULT_DECK:[]),...userCards].filter(c=>!hide.has(c.id)&&!del.has(c.id)).map(c=>overrides[c.id]?Object.assign({},c,overrides[c.id]):c);}
 function saveOverride(id,patch){overrides[id]=Object.assign({},overrides[id],patch);save(K.over,overrides);}
 // Karte als gelöscht markieren (Tombstone). Reversibel: Fortschritt/Karte bleiben im Speicher, sind aber überall ausgeblendet (allCards filtert). Wiederherstellen über „Verwalten".
 function deleteCard(id){if(id&&deleted.indexOf(id)<0){deleted.push(id);save(K.del,deleted);}}
@@ -2694,7 +2694,9 @@ function latestTranscriptTitle(){const ks=Object.keys(scripts||{});if(!ks.length
 function quickStart(scope){boost=null;activeRun=false;ui.scope=scope;ui.srcFilter=null;ui.cat="Alle";save(K.ui,ui);activate("flashcards");} // Schnellstart = global: haengende Kategorie/Transkript-Filter zuruecksetzen
 // 📚 Direkt neue Grundwortschatz-Woerter lernen – setzt alle haengenden Filter zurueck und erzwingt Kategorie „Grundwortschatz".
 function learnCore(){
-  boost=null;activeRun=false;ui.srcFilter=null;ui.cat="Grundwortschatz";
+  boost=null;activeRun=false;ui.srcFilter=null;
+  if(!allCards().some(c=>c&&c.core))loadCore();  // v56.1: Grundwortschatz ggf. zuerst laden (frische Sprache, z.B. Italienisch)
+  ui.cat=allCards().some(c=>c&&c.core&&c.cat==="Grundwortschatz")?"Grundwortschatz":"Alle"; // IT-Kernkarten haben Themen-Kategorien
   const hasNew=allCards().some(c=>c&&c.core&&statusOf(c.id)==="neu");
   ui.scope=hasNew?"new":"all";                       // neue zuerst; wenn keine neuen mehr da sind, alle Grundwortschatz-Karten wiederholen
   save(K.ui,ui);activate("flashcards");
