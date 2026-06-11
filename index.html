@@ -305,7 +305,7 @@ window.addEventListener("load",function(){
     <span id="langSwitch" style="display:inline-flex;gap:4px;align-self:center;margin-left:2px"></span>
     <span class="badge" id="levelBadge">Level A0</span>
     <span class="badge" id="testBadge" title="Geprüftes CEFR-Niveau aus dem Einstufungstest" style="display:none;background:var(--accent-soft);color:var(--accent-ink)"></span>
-    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 11.06. · v62</span>
+    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 11.06. · v64</span>
     <button class="iconbtn" id="themeBtn" style="font-size:12px;padding:5px 10px;margin-left:4px" title="Erscheinungsbild: Automatisch (folgt dem System), Dunkel oder Hell">🌓 Auto</button>
     <p class="sub" id="subline">Dein persönliches Lernkarten-System</p>
   </header>
@@ -367,6 +367,10 @@ window.addEventListener("load",function(){
     <div class="card pad center" id="nowCard" style="margin-bottom:14px">
       <button class="btn lg pulse" id="btnNow" style="font-size:18px;padding:14px 28px">▶️ Jetzt üben</button>
       <div id="nowInfo" class="muted" style="font-size:13px;margin-top:8px"></div>
+      <div class="cw-only" style="margin-top:10px">
+        <button class="btn ghost" id="btnSyncNow" type="button" onclick="manualSync()" style="font-size:13px;padding:6px 12px" title="Holt einen von Claude abgelegten iPhone-/Gist-Stand aus Obsidian und exportiert den aktuellen Artefakt-Stand (Sicherung + Delta)">🔄 Sync mit Obsidian</button>
+        <div id="syncNowInfo" class="muted" style="font-size:12px;margin-top:4px"></div>
+      </div>
     </div>
     <div class="card pad" id="questCard" style="margin-bottom:14px">
       <h3 class="sec">🎯 Heutige Quests</h3>
@@ -2645,7 +2649,7 @@ function fsrsNext(p,g){
 }
 function fsrsReview(p,g){
   const n=fsrsNext(p,g);
-  p.S=n.S;p.D=n.D;p.seen=true;p.reps=(p.reps||0)+1;p.last=todayStr();p.due=addDays(todayStr(),n.interval);
+  p.S=n.S;p.D=n.D;p.seen=true;p.reps=(p.reps||0)+1;p.last=todayStr();p.due=addDays(todayStr(),n.interval);p.lg=g; // lg = letzte Note (v64: für Tages-Dedupe schwacher Karten)
   if(g===1)p.lapses=(p.lapses||0)+1;
   if(g>=2)p.correct=(p.correct||0)+1;else p.wrong=(p.wrong||0)+1;
   if(!p.masteredOn&&isMastered(p))p.masteredOn=todayStr();   // Datum, an dem die Vokabel gemeistert wurde (v43: erst wenn auch Langzeit-Intervall erreicht)
@@ -2673,7 +2677,7 @@ function answer(id,correct){answerG(id,correct?3:1);}
 function markKnown(id){
   const p=progress[id]||(progress[id]={S:0,D:0,seen:false,due:todayStr(),correct:0,wrong:0,reps:0,lapses:0});
   p.seen=true;p.correct=Math.max(p.correct||0,MASTER_HITS);p.reps=Math.max(p.reps||0,MASTER_HITS);
-  p.S=Math.max(p.S||0,45);p.D=p.D||4;p.last=todayStr();p.due=addDays(todayStr(),FSRS.interval(p.S));
+  p.S=Math.max(p.S||0,45);p.D=p.D||4;p.last=todayStr();p.due=addDays(todayStr(),FSRS.interval(p.S));p.lg=4; // v64
   if(!p.masteredOn)p.masteredOn=todayStr();
   p.lastMode=usageModeKey();p.mt=Date.now();usageAns(p.lastMode,true); // v49: zählt als Nutzung (kein Retention-Eintrag); mt für Sync (v53)
   const h=history[todayStr()]||(history[todayStr()]={reviewed:0,correct:0});h.reviewed++;h.correct++;
@@ -2734,7 +2738,8 @@ function buildSession(extraFilter,scopeOverride){
   if(scope==="due"){
     const due=cards.filter(c=>isDue(c.id));
     const ids=new Set(due.map(c=>c.id));
-    const weakExtra=cards.filter(c=>statusOf(c.id)==="schwach"&&!ids.has(c.id)); // schwache immer beimischen
+    const doneToday=c=>{const p=progress[c.id];return !!(p&&p.last===todayStr()&&(p.lg===undefined||p.lg>=2));}; // v64: heute schon (zuletzt richtig) beantwortet
+    const weakExtra=cards.filter(c=>statusOf(c.id)==="schwach"&&!ids.has(c.id)&&!doneToday(c)); // schwache beimischen – aber NICHT die heute bereits richtig beantworteten (v64, Endlosschleifen-Fix)
     cards=due.concat(weakExtra);
   }else if(scope==="weak")cards=cards.filter(c=>statusOf(c.id)==="schwach");
   else if(scope==="new")cards=cards.filter(c=>statusOf(c.id)==="neu");
@@ -4246,6 +4251,20 @@ async function autoMergeObsidian(){ // nur Sync-Format ({ts,device,data:{…}});
     }
   }catch(e){}
   return did;
+}
+async function manualSync(){ // v63: Sync-Knopf im Dashboard — Karsten lässt das Artefakt fast immer offen, der Start-Merge greift dann nie
+  const b=byId("btnSyncNow"),inf=byId("syncNowInfo");
+  if(b){b.disabled=true;b.textContent="⏳ Sync läuft …";}
+  if(inf)inf.textContent="";
+  try{
+    const did=await autoMergeObsidian(); // toastet selbst, wenn etwas übernommen wurde
+    await doBackup(true);                // Sicherung + Artefakt_Delta.md (Rückweg für Claude → Gist)
+    const t=new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+    if(inf)inf.textContent=(did?"🔄 Neuer Stand übernommen":"Kein neuer Sync-Eingang")+" · Sicherung + Delta exportiert ("+t+")";
+    if(!did)toast("✅ Stand gesichert & Delta exportiert");
+    renderDashboard();
+  }catch(e){const m="Sync fehlgeschlagen: "+((e&&e.message)||e);if(inf)inf.textContent=m;toast(m);}
+  finally{if(b){b.disabled=false;b.textContent="🔄 Sync mit Obsidian";}}
 }
 function deltaSnapshot(){ // kleiner Sync-Auszug fürs Zurückspielen in den Gist
   const ref=Date.now()-3*86400000,dp={};
