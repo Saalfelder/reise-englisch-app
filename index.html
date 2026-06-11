@@ -304,7 +304,7 @@ window.addEventListener("load",function(){
     <span id="langSwitch" style="display:inline-flex;gap:4px;align-self:center;margin-left:2px"></span>
     <span class="badge" id="levelBadge">Level A0</span>
     <span class="badge" id="testBadge" title="Geprüftes CEFR-Niveau aus dem Einstufungstest" style="display:none;background:var(--accent-soft);color:var(--accent-ink)"></span>
-    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 10.06. · v56</span>
+    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 11.06. · v57</span>
     <button class="iconbtn" id="themeBtn" style="font-size:12px;padding:5px 10px;margin-left:4px" title="Erscheinungsbild: Automatisch (folgt dem System), Dunkel oder Hell">🌓 Auto</button>
     <p class="sub" id="subline">Dein persönliches Lernkarten-System</p>
   </header>
@@ -2052,7 +2052,9 @@ to deem|erachten / halten für|tu diim|It was deemed necessary.|Es wurde für no
 /* ===== v56: Mehrsprachigkeit – Sprachregistry, Key-Namespacing, Italienisch ===== */
 const LANGS={
  en:{code:"en",name:"Englisch",adj:"englischen",adjE:"englische",adjR:"englischer",flag:"\u{1F1EC}\u{1F1E7}",tts:"en-US",artHint:"the/a/an",obsRoot:"Reise-Englisch",syncFile:"lernstand.json",plan:{start:"2026-06-02",days:365,goal:2750,goalLevel:"B1",stretchGoal:3250,stretchLevel:"B2"}},
- it:{code:"it",name:"Italienisch",adj:"italienischen",adjE:"italienische",adjR:"italienischer",flag:"\u{1F1EE}\u{1F1F9}",tts:"it-IT",artHint:"il/lo/la/un/una",obsRoot:"Reise-Italienisch",syncFile:"lernstand-it.json",plan:null}
+ it:{code:"it",name:"Italienisch",adj:"italienischen",adjE:"italienische",adjR:"italienischer",flag:"\u{1F1EE}\u{1F1F9}",tts:"it-IT",artHint:"il/lo/la/un/una",obsRoot:"Reise-Italienisch",syncFile:"lernstand-it.json",plan:null},
+ fr:{code:"fr",name:"Französisch",adj:"französischen",adjE:"französische",adjR:"französischer",flag:"\u{1F1EB}\u{1F1F7}",tts:"fr-FR",artHint:"le/la/les/un/une",obsRoot:"Reise-Französisch",syncFile:"lernstand-fr.json",plan:null},
+ es:{code:"es",name:"Spanisch",adj:"spanischen",adjE:"spanische",adjR:"spanischer",flag:"\u{1F1EA}\u{1F1F8}",tts:"es-ES",artHint:"el/la/un/una",obsRoot:"Reise-Spanisch",syncFile:"lernstand-es.json",plan:null}
 };
 let CUR_LANG="en";try{const _rl=localStorage.getItem("rs_lang");if(LANGS[_rl])CUR_LANG=_rl;}catch(e){}
 const LNG=LANGS[CUR_LANG];
@@ -2172,7 +2174,232 @@ cento|hundert|TSCHEN-to|Costa cento euro.|Es kostet hundert Euro.|Alltag & Zuhau
 piccolo|klein|PIK-ko-lo|Un caffè piccolo, per favore.|Einen kleinen Kaffee, bitte.|Alltag & Zuhause
 grande|groß|GRAN-de|Una pizza grande, per favore.|Eine große Pizza, bitte.|Alltag & Zuhause`;
 const IT_CORE_DECK=deckLines(IT_CORE_TXT).map(function(l,i){var f=l.split("|");return {id:"itc-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",cat:f[5]||"Grundwortschatz",rank:i+1,core:true,example:false};});
-const CORE_DECK=CUR_LANG!=="en"?IT_CORE_DECK:deckLines(CORE_TXT).map(function(l,i){var f=l.split("|");return {id:"core-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",rank:i+1,cat:"Grundwortschatz",core:true,example:false};});
+/* Französischer + spanischer Reise-Grundwortschatz (je 110 Karten, deutsche Lautschrift) – v57 */
+const FR_CORE_TXT=`salut|hallo / tschüss|ßa-LÜ|Salut, ça va?|Hallo, wie geht es dir?|Smalltalk
+bonjour|guten Morgen / guten Tag|bong-SCHUR|Bonjour, madame!|Guten Tag, meine Dame!|Smalltalk
+bonsoir|guten Abend|bong-SSUAR|Bonsoir à tous.|Guten Abend zusammen.|Smalltalk
+bonne nuit|gute Nacht|bonn NÜI|Bonne nuit, à demain.|Gute Nacht, bis morgen.|Smalltalk
+au revoir|auf Wiedersehen|o rö-WUAR|Au revoir et merci!|Auf Wiedersehen und danke!|Smalltalk
+s'il vous plaît|bitte (Bitte um etwas)|ßil wu PLÄ|Un café, s'il vous plaît.|Einen Kaffee, bitte.|Smalltalk
+merci|danke|mär-SSI|Merci beaucoup!|Vielen Dank!|Smalltalk
+de rien|bitte (gern geschehen)|dö RJÄNG|Merci! – De rien!|Danke! – Bitte!|Smalltalk
+excusez-moi|Entschuldigung (förmlich)|äx-kü-se-MUA|Excusez-moi, où sont les toilettes?|Entschuldigung, wo ist die Toilette?|Smalltalk
+je suis désolé|es tut mir leid|schö ßwi de-so-LE|Je suis désolé, je ne sais pas.|Es tut mir leid, ich weiß es nicht.|Smalltalk
+oui|ja|WI|Oui, bien sûr.|Ja, sicher.|Smalltalk
+non|nein|NONG|Non, merci.|Nein, danke.|Smalltalk
+je ne comprends pas|ich verstehe nicht|schö nö kong-PRONG PA|Je ne comprends pas, pouvez-vous répéter?|Ich verstehe nicht, können Sie das wiederholen?|Smalltalk
+Parlez-vous allemand?|Sprechen Sie Deutsch?|par-LE wu al-MONG|Excusez-moi, parlez-vous allemand?|Entschuldigung, sprechen Sie Deutsch?|Smalltalk
+Parlez-vous anglais?|Sprechen Sie Englisch?|par-LE wu ong-GLÄ|Parlez-vous anglais, s'il vous plaît?|Sprechen Sie bitte Englisch?|Smalltalk
+Ça va?|Wie geht es dir?|ßa WA|Salut Marc, ça va?|Hallo Marc, wie geht es dir?|Smalltalk
+bien|gut|BJÄNG|Ça va bien, merci.|Mir geht es gut, danke.|Smalltalk
+Je m'appelle …|ich heiße …|schö ma-PÄLL|Je m'appelle Karsten.|Ich heiße Karsten.|Smalltalk
+Enchanté!|Freut mich!|ong-schong-TE|Enchanté, je suis Karsten.|Freut mich, ich bin Karsten.|Smalltalk
+parler|sprechen|par-LE|Je parle un peu français.|Ich spreche ein bisschen Französisch.|Smalltalk
+comprendre|verstehen|kong-PRONG-drö|Maintenant je comprends!|Jetzt verstehe ich!|Smalltalk
+être|sein|Ä-trö|Je suis allemand.|Ich bin Deutscher.|Smalltalk
+avoir|haben|a-WUAR|J'ai une question.|Ich habe eine Frage.|Smalltalk
+venir|kommen|wö-NIR|Je viens d'Allemagne.|Ich komme aus Deutschland.|Smalltalk
+l'Allemagne|Deutschland|lal-MANNJ|Je viens d'Allemagne.|Ich komme aus Deutschland.|Smalltalk
+la France|Frankreich|la FRONGSS|J'adore la France!|Ich liebe Frankreich!|Smalltalk
+beau|schön|BO|Que c'est beau!|Wie schön!|Smalltalk
+très|sehr|TRÄ|Très bien!|Sehr gut!|Smalltalk
+C'est combien?|Wie viel kostet das?|ßä kong-BJÄNG|C'est combien, ça?|Wie viel kostet das hier?|Einkaufen
+l'addition|die Rechnung|la-di-SSJONG|L'addition, s'il vous plaît.|Die Rechnung, bitte.|Restaurant & Essen
+le café|der Kaffee|lö ka-FE|Un café et un croissant, s'il vous plaît.|Einen Kaffee und ein Croissant, bitte.|Restaurant & Essen
+l'eau|das Wasser|LO|Une bouteille d'eau, s'il vous plaît.|Eine Flasche Wasser, bitte.|Restaurant & Essen
+le vin|der Wein|lö WÄNG|Un verre de vin rouge.|Ein Glas Rotwein.|Restaurant & Essen
+la bière|das Bier|la BJÄR|Une petite bière, s'il vous plaît.|Ein kleines Bier, bitte.|Restaurant & Essen
+le pain|das Brot|lö PÄNG|Le pain est frais.|Das Brot ist frisch.|Restaurant & Essen
+le fromage|der Käse|lö fro-MASCH|Le fromage français est délicieux.|Der französische Käse ist köstlich.|Restaurant & Essen
+le menu|die Speisekarte|lö mö-NÜ|Le menu, s'il vous plaît.|Die Speisekarte, bitte.|Restaurant & Essen
+le petit-déjeuner|das Frühstück|lö pö-ti-de-schö-NE|Le petit-déjeuner est inclus?|Ist das Frühstück inbegriffen?|Hotel
+le déjeuner|das Mittagessen|lö de-schö-NE|Déjeuner à midi.|Mittagessen um zwölf.|Restaurant & Essen
+le dîner|das Abendessen|lö di-NE|Le dîner est à huit heures.|Das Abendessen ist um acht.|Restaurant & Essen
+manger|essen|mong-SCHE|Je voudrais manger quelque chose.|Ich möchte etwas essen.|Restaurant & Essen
+boire|trinken|BUAR|Qu'est-ce que tu veux boire?|Was möchtest du trinken?|Restaurant & Essen
+Je voudrais …|ich möchte …|schö wu-DRÄ|Je voudrais une glace.|Ich möchte ein Eis.|Restaurant & Essen
+la glace|das Eis|la GLASS|La glace à la vanille est très bonne.|Das Vanilleeis ist sehr gut.|Restaurant & Essen
+bon|gut / lecker|BONG|C'est très bon!|Das ist sehr lecker!|Restaurant & Essen
+le serveur|der Kellner|lö ßär-WÖR|Le serveur est gentil.|Der Kellner ist freundlich.|Restaurant & Essen
+réserver|reservieren|re-ßär-WE|Je voudrais réserver une table.|Ich möchte einen Tisch reservieren.|Restaurant & Essen
+la table|der Tisch|la TA-blö|Une table pour deux, s'il vous plaît.|Einen Tisch für zwei, bitte.|Restaurant & Essen
+l'hôtel|das Hotel|lo-TÄLL|L'hôtel est au centre-ville.|Das Hotel ist im Zentrum.|Hotel
+la chambre|das Zimmer|la SCHONG-brö|Une chambre double, s'il vous plaît.|Ein Doppelzimmer, bitte.|Hotel
+la clé|der Schlüssel|la KLE|Voici la clé de la chambre.|Hier ist der Zimmerschlüssel.|Hotel
+la réservation|die Reservierung|la re-ßär-wa-SSJONG|J'ai une réservation.|Ich habe eine Reservierung.|Hotel
+les toilettes|die Toilette|le tua-LÄTT|Où sont les toilettes?|Wo ist die Toilette?|Hotel
+Où est …?|Wo ist …?|u Ä|Où est la gare?|Wo ist der Bahnhof?|Reisen
+la gare|der Bahnhof|la GAR|La gare est tout près.|Der Bahnhof ist ganz in der Nähe.|Auto & Verkehr
+l'aéroport|der Flughafen|la-e-ro-POR|L'aéroport est loin?|Ist der Flughafen weit weg?|Flughafen & Flug
+le train|der Zug|lö TRÄNG|Le train part à neuf heures.|Der Zug fährt um neun ab.|Auto & Verkehr
+le bus|der Bus|lö BÜSS|Je prends le bus numéro cinq.|Ich nehme den Bus Nummer fünf.|Auto & Verkehr
+le billet|die Fahrkarte / das Ticket|lö bi-JÄ|Un billet pour Paris, s'il vous plaît.|Eine Fahrkarte nach Paris, bitte.|Auto & Verkehr
+le vol|der Flug|lö WOLL|Le vol a du retard.|Der Flug hat Verspätung.|Flughafen & Flug
+la valise|der Koffer|la wa-LIS|Ma valise est lourde.|Mein Koffer ist schwer.|Reisen
+le passeport|der Reisepass|lö pass-POR|Voici mon passeport.|Hier ist mein Reisepass.|Reisen
+à droite|rechts|a DRUAT|Tournez à droite.|Biegen Sie rechts ab.|Reisen
+à gauche|links|a GOSCH|Le bar est à gauche.|Die Bar ist links.|Reisen
+tout droit|geradeaus|tu DRUA|Allez tout droit.|Gehen Sie immer geradeaus.|Reisen
+près|nah / in der Nähe|PRÄ|Il y a une pharmacie près d'ici?|Gibt es hier in der Nähe eine Apotheke?|Reisen
+loin|weit (entfernt)|LUÄNG|Ce n'est pas loin.|Es ist nicht weit.|Reisen
+la rue|die Straße|la RÜ|Quelle rue dois-je prendre?|Welche Straße muss ich nehmen?|Auto & Verkehr
+la place|der Platz|la PLASS|On se voit sur la place.|Wir sehen uns auf dem Platz.|Reisen
+le centre-ville|das Zentrum / die Innenstadt|lö ßong-trö-WILL|On va au centre-ville.|Wir gehen in die Innenstadt.|Reisen
+la plage|der Strand|la PLASCH|Aujourd'hui on va à la plage.|Heute gehen wir an den Strand.|Reisen
+la mer|das Meer|la MÄR|La mer est magnifique.|Das Meer ist wunderschön.|Reisen
+aller|gehen / fahren|a-LE|Allons-y!|Los geht es!|Reisen
+Ça prend combien de temps?|Wie lange dauert es?|ßa prong kong-BJÄNG dö TONG|Ça prend combien de temps à pied?|Wie lange dauert es zu Fuß?|Reisen
+la semaine|die Woche|la ßö-MÄNN|Je reste une semaine.|Ich bleibe eine Woche.|Reisen
+ouvert|geöffnet|u-WÄR|Le musée est ouvert aujourd'hui?|Ist das Museum heute geöffnet?|Einkaufen
+fermé|geschlossen|fär-ME|Le magasin est fermé.|Das Geschäft ist geschlossen.|Einkaufen
+le magasin|das Geschäft|lö ma-ga-SÄNG|Le magasin ouvre à dix heures.|Das Geschäft öffnet um zehn.|Einkaufen
+le supermarché|der Supermarkt|lö ßü-pär-mar-SCHE|Je vais au supermarché.|Ich gehe in den Supermarkt.|Einkaufen
+payer|bezahlen|pä-JE|Je peux payer par carte?|Kann ich mit Karte zahlen?|Einkaufen
+la carte|die Karte (Bank-/Kreditkarte)|la KART|Je paie par carte.|Ich zahle mit Karte.|Einkaufen
+en espèces|bar (mit Bargeld)|on äss-PÄSS|Seulement en espèces, désolé.|Nur Bargeld, tut mir leid.|Einkaufen
+cher|teuer|SCHÄR|C'est trop cher.|Das ist zu teuer.|Einkaufen
+pas cher|günstig / billig|pa SCHÄR|Je cherche un hôtel pas cher.|Ich suche ein günstiges Hotel.|Einkaufen
+au secours|Hilfe|o ßö-KUR|Au secours, s'il vous plaît!|Hilfe, bitte!|Gesundheit
+Pouvez-vous m'aider?|Können Sie mir helfen?|pu-we-wu mä-DE|Excusez-moi, pouvez-vous m'aider?|Entschuldigung, können Sie mir helfen?|Gesundheit
+la pharmacie|die Apotheke|la far-ma-SSI|La pharmacie est ouverte?|Hat die Apotheke geöffnet?|Gesundheit
+le médecin|der Arzt|lö med-SSÄNG|J'ai besoin d'un médecin.|Ich brauche einen Arzt.|Gesundheit
+l'hôpital|das Krankenhaus|lo-pi-TALL|Où est l'hôpital?|Wo ist das Krankenhaus?|Gesundheit
+malade|krank|ma-LAD|Je me sens malade.|Ich fühle mich krank.|Gesundheit
+la douleur|der Schmerz|la du-LÖR|J'ai une douleur ici.|Ich habe hier Schmerzen.|Gesundheit
+aujourd'hui|heute|o-schur-DWI|Aujourd'hui il fait chaud.|Heute ist es warm.|Alltag & Zuhause
+demain|morgen|dö-MÄNG|À demain!|Bis morgen!|Alltag & Zuhause
+hier|gestern|JÄR|Hier j'ai visité Paris.|Gestern habe ich Paris besichtigt.|Alltag & Zuhause
+maintenant|jetzt|mängt-NONG|Maintenant on mange.|Jetzt essen wir.|Alltag & Zuhause
+Quelle heure est-il?|Wie spät ist es?|käll ÖR ä-TILL|Excusez-moi, quelle heure est-il?|Entschuldigung, wie spät ist es?|Alltag & Zuhause
+le jour|der Tag|lö SCHUR|Bonne journée!|Schönen Tag noch!|Alltag & Zuhause
+un|eins|ÄNG|Un moment, s'il vous plaît.|Einen Moment, bitte.|Alltag & Zuhause
+deux|zwei|DÖ|Deux billets, s'il vous plaît.|Zwei Fahrkarten, bitte.|Alltag & Zuhause
+trois|drei|TRUA|Trois euros, s'il vous plaît.|Drei Euro, bitte.|Alltag & Zuhause
+quatre|vier|KA-trö|Nous sommes quatre.|Wir sind zu viert.|Alltag & Zuhause
+cinq|fünf|SSÄNK|Cinq minutes, s'il vous plaît.|Fünf Minuten, bitte.|Alltag & Zuhause
+six|sechs|SSISS|Le train part à six heures.|Der Zug fährt um sechs.|Alltag & Zuhause
+sept|sieben|SSÄTT|Le petit-déjeuner est à sept heures.|Das Frühstück ist um sieben.|Alltag & Zuhause
+huit|acht|ÜITT|On se voit à huit heures.|Wir sehen uns um acht.|Alltag & Zuhause
+neuf|neun|NÖFF|Il est neuf heures.|Es ist neun Uhr.|Alltag & Zuhause
+dix|zehn|DISS|Dix euros, s'il vous plaît.|Zehn Euro, bitte.|Alltag & Zuhause
+cent|hundert|SSONG|Ça coûte cent euros.|Es kostet hundert Euro.|Alltag & Zuhause
+petit|klein|pö-TI|Un petit café, s'il vous plaît.|Einen kleinen Kaffee, bitte.|Alltag & Zuhause
+grand|groß|GRONG|Une grande pizza, s'il vous plaît.|Eine große Pizza, bitte.|Alltag & Zuhause`;
+const ES_CORE_TXT=`hola|hallo|O-la|¡Hola! ¿Qué tal?|Hallo! Wie geht es dir?|Smalltalk
+buenos días|guten Morgen / guten Tag|BUE-noss DI-ass|¡Buenos días, señora!|Guten Tag, meine Dame!|Smalltalk
+buenas tardes|guten Tag (nachmittags)|BUE-nass TAR-dess|Buenas tardes a todos.|Guten Tag zusammen.|Smalltalk
+buenas noches|guten Abend / gute Nacht|BUE-nass NO-tschess|Buenas noches, hasta mañana.|Gute Nacht, bis morgen.|Smalltalk
+adiós|auf Wiedersehen / tschüss|a-DJOSS|¡Adiós y gracias!|Auf Wiedersehen und danke!|Smalltalk
+por favor|bitte (Bitte um etwas)|por fa-WOR|Un café, por favor.|Einen Kaffee, bitte.|Smalltalk
+gracias|danke|GRA-ssjass|¡Muchas gracias!|Vielen Dank!|Smalltalk
+de nada|bitte (gern geschehen)|de NA-da|¡Gracias! – ¡De nada!|Danke! – Bitte!|Smalltalk
+perdone|Entschuldigung (förmlich)|per-DO-ne|Perdone, ¿dónde está el baño?|Entschuldigung, wo ist die Toilette?|Smalltalk
+lo siento|es tut mir leid|lo SSJEN-to|Lo siento, no lo sé.|Es tut mir leid, ich weiß es nicht.|Smalltalk
+sí|ja|SSI|Sí, claro.|Ja, sicher.|Smalltalk
+no|nein|NO|No, gracias.|Nein, danke.|Smalltalk
+no entiendo|ich verstehe nicht|no en-TJEN-do|No entiendo, ¿puede repetir?|Ich verstehe nicht, können Sie das wiederholen?|Smalltalk
+¿Habla alemán?|Sprechen Sie Deutsch?|A-bla a-le-MAN|Perdone, ¿habla alemán?|Entschuldigung, sprechen Sie Deutsch?|Smalltalk
+¿Habla inglés?|Sprechen Sie Englisch?|A-bla in-GLESS|¿Habla inglés, por favor?|Sprechen Sie bitte Englisch?|Smalltalk
+¿Qué tal?|Wie geht es dir?|ke TAL|Hola Carlos, ¿qué tal?|Hallo Carlos, wie geht es dir?|Smalltalk
+bien|gut|BJEN|Estoy bien, gracias.|Mir geht es gut, danke.|Smalltalk
+Me llamo …|ich heiße …|me JA-mo|Me llamo Karsten.|Ich heiße Karsten.|Smalltalk
+¡Mucho gusto!|Freut mich!|MU-tscho GUSS-to|Mucho gusto, soy Karsten.|Freut mich, ich bin Karsten.|Smalltalk
+hablar|sprechen|a-BLAR|Hablo un poco de español.|Ich spreche ein bisschen Spanisch.|Smalltalk
+entender|verstehen|en-ten-DER|¡Ahora entiendo!|Jetzt verstehe ich!|Smalltalk
+ser|sein|SSER|Soy alemán.|Ich bin Deutscher.|Smalltalk
+tener|haben|te-NER|Tengo una pregunta.|Ich habe eine Frage.|Smalltalk
+venir|kommen|we-NIR|Vengo de Alemania.|Ich komme aus Deutschland.|Smalltalk
+Alemania|Deutschland|a-le-MA-nja|Vengo de Alemania.|Ich komme aus Deutschland.|Smalltalk
+España|Spanien|ess-PAN-ja|¡Me encanta España!|Ich liebe Spanien!|Smalltalk
+bonito|schön|bo-NI-to|¡Qué bonito!|Wie schön!|Smalltalk
+muy|sehr|MUI|¡Muy bien!|Sehr gut!|Smalltalk
+¿Cuánto cuesta?|Wie viel kostet das?|KWAN-to KWESS-ta|¿Cuánto cuesta esto?|Wie viel kostet das hier?|Einkaufen
+la cuenta|die Rechnung|la KWEN-ta|La cuenta, por favor.|Die Rechnung, bitte.|Restaurant & Essen
+el café|der Kaffee|el ka-FE|Un café con leche, por favor.|Einen Milchkaffee, bitte.|Restaurant & Essen
+el agua|das Wasser|el A-gwa|Una botella de agua, por favor.|Eine Flasche Wasser, bitte.|Restaurant & Essen
+el vino|der Wein|el WI-no|Una copa de vino tinto.|Ein Glas Rotwein.|Restaurant & Essen
+la cerveza|das Bier|la sser-WE-ssa|Una cerveza pequeña, por favor.|Ein kleines Bier, bitte.|Restaurant & Essen
+el pan|das Brot|el PAN|El pan está fresco.|Das Brot ist frisch.|Restaurant & Essen
+la paella|die Paella|la pa-E-ja|La paella está riquísima.|Die Paella ist superlecker.|Restaurant & Essen
+el menú|die Speisekarte|el me-NU|El menú, por favor.|Die Speisekarte, bitte.|Restaurant & Essen
+el desayuno|das Frühstück|el de-ssa-JU-no|¿El desayuno está incluido?|Ist das Frühstück inbegriffen?|Hotel
+el almuerzo|das Mittagessen|el al-MWER-sso|Almuerzo a las dos.|Mittagessen um zwei.|Restaurant & Essen
+la cena|das Abendessen|la SSE-na|La cena es a las nueve.|Das Abendessen ist um neun.|Restaurant & Essen
+comer|essen|ko-MER|Quiero comer algo.|Ich möchte etwas essen.|Restaurant & Essen
+beber|trinken|be-BER|¿Qué quieres beber?|Was möchtest du trinken?|Restaurant & Essen
+Quisiera …|ich möchte …|ki-SSJE-ra|Quisiera un helado.|Ich möchte ein Eis.|Restaurant & Essen
+el helado|das Eis|el e-LA-do|El helado de vainilla está muy bueno.|Das Vanilleeis ist sehr gut.|Restaurant & Essen
+bueno|gut / lecker|BWE-no|¡Está muy bueno!|Das ist sehr lecker!|Restaurant & Essen
+el camarero|der Kellner|el ka-ma-RE-ro|El camarero es amable.|Der Kellner ist freundlich.|Restaurant & Essen
+reservar|reservieren|re-sser-WAR|Quisiera reservar una mesa.|Ich möchte einen Tisch reservieren.|Restaurant & Essen
+la mesa|der Tisch|la ME-ssa|Una mesa para dos, por favor.|Einen Tisch für zwei, bitte.|Restaurant & Essen
+el hotel|das Hotel|el o-TEL|El hotel está en el centro.|Das Hotel ist im Zentrum.|Hotel
+la habitación|das Zimmer|la a-bi-ta-SSJON|Una habitación doble, por favor.|Ein Doppelzimmer, bitte.|Hotel
+la llave|der Schlüssel|la JA-we|Aquí está la llave de la habitación.|Hier ist der Zimmerschlüssel.|Hotel
+la reserva|die Reservierung|la re-SSER-wa|Tengo una reserva.|Ich habe eine Reservierung.|Hotel
+el baño|das Bad / die Toilette|el BAN-jo|¿Dónde está el baño?|Wo ist die Toilette?|Hotel
+¿Dónde está …?|Wo ist …?|DON-de ess-TA|¿Dónde está la estación?|Wo ist der Bahnhof?|Reisen
+la estación|der Bahnhof|la ess-ta-SSJON|La estación está cerca.|Der Bahnhof ist in der Nähe.|Auto & Verkehr
+el aeropuerto|der Flughafen|el a-e-ro-PWER-to|¿El aeropuerto está lejos?|Ist der Flughafen weit weg?|Flughafen & Flug
+el tren|der Zug|el TREN|El tren sale a las nueve.|Der Zug fährt um neun ab.|Auto & Verkehr
+el autobús|der Bus|el au-to-BUSS|Tomo el autobús número cinco.|Ich nehme den Bus Nummer fünf.|Auto & Verkehr
+el billete|die Fahrkarte / das Ticket|el bi-JE-te|Un billete para Madrid, por favor.|Eine Fahrkarte nach Madrid, bitte.|Auto & Verkehr
+el vuelo|der Flug|el WUE-lo|El vuelo lleva retraso.|Der Flug hat Verspätung.|Flughafen & Flug
+la maleta|der Koffer|la ma-LE-ta|Mi maleta pesa mucho.|Mein Koffer ist sehr schwer.|Reisen
+el pasaporte|der Reisepass|el pa-ssa-POR-te|Aquí está mi pasaporte.|Hier ist mein Reisepass.|Reisen
+a la derecha|rechts|a la de-RE-tscha|Gire a la derecha.|Biegen Sie rechts ab.|Reisen
+a la izquierda|links|a la iss-KJER-da|El bar está a la izquierda.|Die Bar ist links.|Reisen
+todo recto|geradeaus|TO-do REK-to|Siga todo recto.|Gehen Sie immer geradeaus.|Reisen
+cerca|nah / in der Nähe|SSER-ka|¿Hay una farmacia cerca de aquí?|Gibt es hier in der Nähe eine Apotheke?|Reisen
+lejos|weit (entfernt)|LE-choss|No está lejos.|Es ist nicht weit.|Reisen
+la calle|die Straße|la KA-je|¿Qué calle tengo que tomar?|Welche Straße muss ich nehmen?|Auto & Verkehr
+la plaza|der Platz|la PLA-ssa|Nos vemos en la plaza.|Wir sehen uns auf dem Platz.|Reisen
+el centro|das Zentrum / die Innenstadt|el SSEN-tro|Vamos al centro.|Wir gehen in die Innenstadt.|Reisen
+la playa|der Strand|la PLA-ja|Hoy vamos a la playa.|Heute gehen wir an den Strand.|Reisen
+el mar|das Meer|el MAR|El mar es precioso.|Das Meer ist wunderschön.|Reisen
+ir|gehen / fahren|IR|¡Vamos!|Los geht es!|Reisen
+¿Cuánto se tarda?|Wie lange dauert es?|KWAN-to sse TAR-da|¿Cuánto se tarda a pie?|Wie lange dauert es zu Fuß?|Reisen
+la semana|die Woche|la sse-MA-na|Me quedo una semana.|Ich bleibe eine Woche.|Reisen
+abierto|geöffnet|a-BJER-to|¿El museo está abierto hoy?|Ist das Museum heute geöffnet?|Einkaufen
+cerrado|geschlossen|sser-RA-do|La tienda está cerrada.|Das Geschäft ist geschlossen.|Einkaufen
+la tienda|das Geschäft|la TJEN-da|La tienda abre a las diez.|Das Geschäft öffnet um zehn.|Einkaufen
+el supermercado|der Supermarkt|el ssu-per-mer-KA-do|Voy al supermercado.|Ich gehe in den Supermarkt.|Einkaufen
+pagar|bezahlen|pa-GAR|¿Puedo pagar con tarjeta?|Kann ich mit Karte zahlen?|Einkaufen
+la tarjeta|die Karte (Bank-/Kreditkarte)|la tar-CHE-ta|Pago con tarjeta.|Ich zahle mit Karte.|Einkaufen
+en efectivo|bar (mit Bargeld)|en e-fek-TI-wo|Solo en efectivo, lo siento.|Nur Bargeld, tut mir leid.|Einkaufen
+caro|teuer|KA-ro|Es demasiado caro.|Das ist zu teuer.|Einkaufen
+barato|günstig / billig|ba-RA-to|Busco un hotel barato.|Ich suche ein günstiges Hotel.|Einkaufen
+socorro|Hilfe|sso-KOR-ro|¡Socorro, por favor!|Hilfe, bitte!|Gesundheit
+¿Puede ayudarme?|Können Sie mir helfen?|PWE-de a-ju-DAR-me|Perdone, ¿puede ayudarme?|Entschuldigung, können Sie mir helfen?|Gesundheit
+la farmacia|die Apotheke|la far-MA-ssja|¿La farmacia está abierta?|Hat die Apotheke geöffnet?|Gesundheit
+el médico|der Arzt|el ME-di-ko|Necesito un médico.|Ich brauche einen Arzt.|Gesundheit
+el hospital|das Krankenhaus|el oss-pi-TAL|¿Dónde está el hospital?|Wo ist das Krankenhaus?|Gesundheit
+enfermo|krank|en-FER-mo|Me siento enfermo.|Ich fühle mich krank.|Gesundheit
+el dolor|der Schmerz|el do-LOR|Tengo un dolor aquí.|Ich habe hier Schmerzen.|Gesundheit
+hoy|heute|OI|Hoy hace calor.|Heute ist es warm.|Alltag & Zuhause
+mañana|morgen|man-JA-na|¡Hasta mañana!|Bis morgen!|Alltag & Zuhause
+ayer|gestern|a-JER|Ayer visité Madrid.|Gestern habe ich Madrid besichtigt.|Alltag & Zuhause
+ahora|jetzt|a-O-ra|Ahora comemos.|Jetzt essen wir.|Alltag & Zuhause
+¿Qué hora es?|Wie spät ist es?|ke O-ra ess|Perdone, ¿qué hora es?|Entschuldigung, wie spät ist es?|Alltag & Zuhause
+el día|der Tag|el DI-a|¡Que tenga un buen día!|Schönen Tag noch!|Alltag & Zuhause
+uno|eins|U-no|Un momento, por favor.|Einen Moment, bitte.|Alltag & Zuhause
+dos|zwei|DOSS|Dos billetes, por favor.|Zwei Fahrkarten, bitte.|Alltag & Zuhause
+tres|drei|TRESS|Tres euros, por favor.|Drei Euro, bitte.|Alltag & Zuhause
+cuatro|vier|KWA-tro|Somos cuatro.|Wir sind zu viert.|Alltag & Zuhause
+cinco|fünf|SSIN-ko|Cinco minutos, por favor.|Fünf Minuten, bitte.|Alltag & Zuhause
+seis|sechs|SSEISS|El tren sale a las seis.|Der Zug fährt um sechs.|Alltag & Zuhause
+siete|sieben|SSJE-te|El desayuno es a las siete.|Das Frühstück ist um sieben.|Alltag & Zuhause
+ocho|acht|O-tscho|Nos vemos a las ocho.|Wir sehen uns um acht.|Alltag & Zuhause
+nueve|neun|NWE-we|Son las nueve.|Es ist neun Uhr.|Alltag & Zuhause
+diez|zehn|DJESS|Diez euros, por favor.|Zehn Euro, bitte.|Alltag & Zuhause
+cien|hundert|SSJEN|Cuesta cien euros.|Es kostet hundert Euro.|Alltag & Zuhause
+pequeño|klein|pe-KEN-jo|Un café pequeño, por favor.|Einen kleinen Kaffee, bitte.|Alltag & Zuhause
+grande|groß|GRAN-de|Una pizza grande, por favor.|Eine große Pizza, bitte.|Alltag & Zuhause`;
+function buildCoreDeck(txt,pfx){return deckLines(txt).map(function(l,i){var f=l.split("|");return {id:pfx+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",cat:f[5]||"Grundwortschatz",rank:i+1,core:true,example:false};});}
+const FR_CORE_DECK=buildCoreDeck(FR_CORE_TXT,"frc-");
+const ES_CORE_DECK=buildCoreDeck(ES_CORE_TXT,"esc-");
+const FOREIGN_CORE={it:IT_CORE_DECK,fr:FR_CORE_DECK,es:ES_CORE_DECK}; // IT behaelt seine Original-IDs (itc-*)
+const CORE_DECK=CUR_LANG!=="en"?(FOREIGN_CORE[CUR_LANG]||[]):deckLines(CORE_TXT).map(function(l,i){var f=l.split("|");return {id:"core-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",rank:i+1,cat:"Grundwortschatz",core:true,example:false};});
 const GRAMMAR_DECK=CUR_LANG!=="en"?[]:deckLines(GRAMMAR_TXT).map(function(l,i){var f=l.split("|");return {id:"gr-"+String(i+1).padStart(3,"0"),lvlMin:+f[0],cat:f[1],en:f[2],de:f[3],pron:f[4]||"",ex_en:f[5]||"",ex_de:f[6]||"",rank:i+1,type:"grammatik",core:false,example:false};});
 const CHUNK_DECK=CUR_LANG!=="en"?[]:deckLines(CHUNK_TXT).map(function(l,i){var f=l.split("|");return {id:"chk-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",cat:f[5]||"Sonstiges",rank:i+1,chunk:true,core:false,example:false};});
 const LEVEL_DECK=[];
@@ -2448,7 +2675,7 @@ function markKnown(id){
 
 /* ============================ text helpers ============================ */
 function norm(s){return (s||"").toString().toLowerCase().trim().replace(/\s+/g," ").replace(/[.!?,;:]+$/,"").replace(/^[¿¡]/,"");}
-function stripArticle(s){s=String(s==null?"":s);if(CUR_LANG==="it")return s.replace(/^\s*(il|lo|la|i|gli|le|un|uno|una)\s+/i,"").replace(/^\s*(l\x27|un\x27)\s*/i,"").trim();return s.replace(/^\s*(the|a|an)\s+/i,"").trim();}
+function stripArticle(s){s=String(s==null?"":s);if(CUR_LANG==="it")return s.replace(/^\s*(il|lo|la|i|gli|le|un|uno|una)\s+/i,"").replace(/^\s*(l\x27|un\x27)\s*/i,"").trim();if(CUR_LANG==="fr")return s.replace(/^\s*(le|la|les|un|une|des)\s+/i,"").replace(/^\s*(l\x27|d\x27)\s*/i,"").trim();if(CUR_LANG==="es")return s.replace(/^\s*(el|la|los|las|un|una|unos|unas)\s+/i,"").trim();return s.replace(/^\s*(the|a|an)\s+/i,"").trim();}
 function stripDeArticle(s){return String(s==null?"":s).replace(/^\s*(der|die|das|den|dem|ein|eine|einen|einem)\s+/i,"").trim();}
 function normAns(s){return norm(stripArticle(s));}
 function answersOf(card){return String(card.en).split(/[\/;]/).map(s=>normAns(s)).filter(Boolean);}
@@ -2551,8 +2778,8 @@ function ttsAvailable(){return typeof window!=="undefined" && "speechSynthesis" 
 function loadVoices(){try{ttsVoices=ttsAvailable()?window.speechSynthesis.getVoices():[];}catch(e){ttsVoices=[];}}
 function enVoices(){return ttsVoices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith(LNG.tts.slice(0,2).toLowerCase()));}
 function voiceGender(v){const n=(v.name||"").toLowerCase();
-  if(/female|woman|frau|weibl|samantha|victoria|karen|zira|susan|tessa|fiona|moira|serena|allison|ava|joanna|amy|emma|salli|kimberly|kendra|nicole|catherine|hazel|sonia|libby|aria|jenny|michelle|stephanie|federica|elsa|paola|carla|silvia|alice/.test(n))return "f";
-  if(/\bmale\b|\bman\b|mann|männl|daniel|david|mark|alex|fred|\btom\b|oliver|arthur|brian|matthew|\bguy\b|james|george|ryan|eric|aaron|liam|english male|us english male|uk english male|luca|diego|paolo|giorgio/.test(n))return "m";
+  if(/female|woman|frau|weibl|samantha|victoria|karen|zira|susan|tessa|fiona|moira|serena|allison|ava|joanna|amy|emma|salli|kimberly|kendra|nicole|catherine|hazel|sonia|libby|aria|jenny|michelle|stephanie|federica|elsa|paola|carla|silvia|alice|amelie|audrey|celine|chantal|juliette|marie|monica|paulina|lucia|conchita|penelope/.test(n))return "f";
+  if(/\bmale\b|\bman\b|mann|männl|daniel|david|mark|alex|fred|\btom\b|oliver|arthur|brian|matthew|\bguy\b|james|george|ryan|eric|aaron|liam|english male|us english male|uk english male|luca|diego|paolo|giorgio|nicolas|henri|jorge|miguel|enrique|carlos|antonio/.test(n))return "m";
   return "u";
 }
 function pickVoiceName(){const evs=enVoices();if(!evs.length)return "";
