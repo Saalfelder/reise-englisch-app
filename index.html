@@ -305,7 +305,7 @@ window.addEventListener("load",function(){
     <span id="langSwitch" style="display:inline-flex;gap:4px;align-self:center;margin-left:2px"></span>
     <span class="badge" id="levelBadge">Level A0</span>
     <span class="badge" id="testBadge" title="Geprüftes CEFR-Niveau aus dem Einstufungstest" style="display:none;background:var(--accent-soft);color:var(--accent-ink)"></span>
-    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 11.06. · v64</span>
+    <span class="muted" style="font-size:11px;align-self:center;margin-left:6px" title="Build-Version – sag mir diese Nummer, wenn etwas nicht stimmt">Build 12.06. · v66</span>
     <button class="iconbtn" id="themeBtn" style="font-size:12px;padding:5px 10px;margin-left:4px" title="Erscheinungsbild: Automatisch (folgt dem System), Dunkel oder Hell">🌓 Auto</button>
     <p class="sub" id="subline">Dein persönliches Lernkarten-System</p>
   </header>
@@ -514,6 +514,12 @@ window.addEventListener("load",function(){
       <p class="muted" style="font-size:13px;margin-top:0">Natürliche Mehrwort-Blöcke wie „make a decision" oder „I'm just looking, thanks" – so sprechen Muttersprachler wirklich. Wer in Chunks lernt, spricht flüssiger als mit Einzelwörtern.</p>
       <div class="row"><button class="btn" id="btnChunks">🧩 Wendungen laden</button></div>
       <div id="chunkStatus" class="muted" style="font-size:13px;margin-top:10px"></div>
+    </div>
+    <div class="card pad" id="sitCard" style="margin-top:14px">
+      <h3 class="sec">📍 Situationen – die 50 wichtigsten Sätze</h3>
+      <p class="muted" style="font-size:13px;margin-top:0">Die meistgesagten Sätze pro Reise-Situation (beide Seiten: 🧳 du und 🛎️ Personal), in typischer Reihenfolge – plus die wichtigsten Einzelvokabeln. 💬 markiert Redewendungen, die man nicht wörtlich übersetzen kann. Antippen lädt die Karten und startet die Übung – funktioniert komplett ohne KI (auch iPhone). Geübt wird in allen Modi: Lesen, Schreiben (Lückentext), Hören, Multiple Choice.</p>
+      <div id="sitBtns" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div id="sitStatus" class="muted" style="font-size:13px;margin-top:10px"></div>
     </div>
   </section>
 
@@ -2412,6 +2418,351 @@ const FOREIGN_CORE={it:IT_CORE_DECK,fr:FR_CORE_DECK,es:ES_CORE_DECK}; // IT beha
 const CORE_DECK=CUR_LANG!=="en"?(FOREIGN_CORE[CUR_LANG]||[]):deckLines(CORE_TXT).map(function(l,i){var f=l.split("|");return {id:"core-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",rank:i+1,cat:"Grundwortschatz",core:true,example:false};});
 const GRAMMAR_DECK=CUR_LANG!=="en"?[]:deckLines(GRAMMAR_TXT).map(function(l,i){var f=l.split("|");return {id:"gr-"+String(i+1).padStart(3,"0"),lvlMin:+f[0],cat:f[1],en:f[2],de:f[3],pron:f[4]||"",ex_en:f[5]||"",ex_de:f[6]||"",rank:i+1,type:"grammatik",core:false,example:false};});
 const CHUNK_DECK=CUR_LANG!=="en"?[]:deckLines(CHUNK_TXT).map(function(l,i){var f=l.split("|");return {id:"chk-"+String(i+1).padStart(3,"0"),en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||"",cat:f[5]||"Sonstiges",rank:i+1,chunk:true,core:false,example:false};});
+/* ===== SECTION: SITUATIONEN (v66) – die 50 meistgesagten Sätze pro Reise-Situation, beide Rollen (G=Gast/Reisender, P=Personal),
+   Format rank|role|idiom|en|de|pron|lit|gap – komplett vorgebacken, damit alles ohne KI funktioniert (auch in der iPhone-PWA).
+   V-Zeilen = wichtigste Einzelvokabeln der Situation. Inhalte am 12.06.2026 aus ESL-/Phrasebook-Quellen kuratiert (Hotel: Transkript). */
+const SIT_HOTEL_TXT=`
+1|G|0|Hello, I have a reservation under the name Miller.|Hallo, ich habe eine Reservierung auf den Namen Miller.|hä-LOU, ai häff ä res-er-WEH-schen AN-der se nehm MIL-ler||reservation
+2|G|0|I'd like to check in, please.|Ich möchte gerne einchecken, bitte.|aid laik tu tschek IN, plies||check in
+3|G|0|Do you have my reservation?|Haben Sie meine Reservierung?|du ju häff mai res-er-WEH-schen||reservation
+4|G|0|Is there Wi-Fi in the room?|Gibt es WLAN im Zimmer?|is sär WAI-fai in se ruhm||room
+5|G|0|What time is check-out?|Um wie viel Uhr ist der Check-out?|wott taim is tschek-AUT||check-out
+6|G|0|Can I have a non-smoking room on a higher floor?|Kann ich ein Nichtraucher-Zimmer in einer höheren Etage haben?|kän ai häff ä non-SMOH-king ruhm on ä HAI-er flor||floor
+7|G|0|Is breakfast included?|Ist das Frühstück inbegriffen?|is BREK-fest in-KLU-did||included
+8|G|0|Could I have an early check-in?|Könnte ich einen frühen Check-in bekommen?|kudd ai häff än ÖR-li tschek-IN||early
+9|G|0|My room key, please.|Meinen Zimmerschlüssel, bitte.|mai ruhm kie, plies||key
+10|P|0|Welcome to the hotel. Do you have a reservation?|Willkommen im Hotel. Haben Sie eine Reservierung?|WELL-kam tu se ho-TELL. du ju häff ä res-er-WEH-schen||reservation
+11|P|0|May I have your passport or ID, please?|Dürfte ich Ihren Pass oder Ausweis haben, bitte?|meh ai häff jor PASS-port or ai-DIE, plies||passport
+12|P|1|How would you like to pay?|Wie möchten Sie bezahlen?|hau wudd ju laik tu peh|wörtlich: „Wie würden Sie zu zahlen mögen?" — höfliche Standardfrage|pay
+13|P|0|Here is your room key. You're in room 512.|Hier ist Ihr Zimmerschlüssel. Sie sind in Zimmer 512.|hier is jor ruhm kie. jur in ruhm faiv-twelf||key
+14|P|0|Breakfast is served from 7 to 10 a.m. in the restaurant.|Frühstück gibt es von 7 bis 10 Uhr im Restaurant.|BREK-fest is sörwd from SEW-en tu tenn eh-emm in se RES-trant||served
+15|G|0|The air conditioning isn't working.|Die Klimaanlage funktioniert nicht.|se är-kon-DI-scho-ning isnt WÖR-king||air conditioning
+16|G|0|There are no towels in the room.|Es sind keine Handtücher im Zimmer.|sär ar nou TAU-els in se ruhm||towels
+17|G|0|The Wi-Fi isn't working. Can you reset it?|Das WLAN funktioniert nicht. Können Sie es zurücksetzen?|se WAI-fai isnt WÖR-king. kän ju ri-SETT it||reset
+18|G|0|Could I have more pillows or blankets?|Könnte ich mehr Kissen oder Decken bekommen?|kudd ai häff mor PI-lous or BLÄN-kets||pillows,blankets
+19|G|0|The toilet is clogged and the shower is leaking.|Die Toilette ist verstopft und die Dusche tropft.|se TEU-let is kloggd änd se SCHAU-er is LIE-king||clogged,leaking
+20|G|0|Can someone fix the TV, please?|Kann jemand den Fernseher reparieren, bitte?|kän SAM-wann fix se ti-WIE, plies||fix
+21|G|0|I'd like to extend my stay by two nights.|Ich möchte meinen Aufenthalt um zwei Nächte verlängern.|aid laik tu ex-TEND mai steh bai tuh naits||extend,stay
+22|G|0|What time is housekeeping coming?|Wann kommt der Zimmerservice (Reinigung)?|wott taim is HAUS-kie-ping KA-ming||housekeeping
+23|G|1|Please do not disturb.|Bitte nicht stören.|plies du nott dis-TÖRB|wörtlich: „Bitte nicht stören Sie" — feste Schild-Formel|disturb
+24|P|0|Housekeeping! May I clean your room?|Zimmerreinigung! Darf ich Ihr Zimmer sauber machen?|HAUS-kie-ping! meh ai klien jor ruhm||clean
+25|P|0|Is everything okay with your room?|Ist mit Ihrem Zimmer alles in Ordnung?|is EW-ri-ßing ou-KEH wiß jor ruhm||everything
+26|P|1|Would you like turn-down service?|Möchten Sie den Abenddienst (Bett aufdecken)?|wudd ju laik törn-daun SÖR-wis|wörtlich: „Runterklapp-Service" — Bett für die Nacht vorbereiten|service
+27|P|1|I'll send someone up right away to fix it.|Ich schicke sofort jemanden hoch, der das repariert.|ail send SAM-wann app rait ä-WEH tu fix it|wörtlich: „jemanden hochsenden, gleich weg" — right away = sofort|right away
+28|G|0|A table for two, please.|Einen Tisch für zwei, bitte.|ä TEH-bel for tuh, plies||table
+29|G|0|Can I have the menu, please?|Kann ich die Speisekarte haben, bitte?|kän ai häff se MEN-ju, plies||menu
+30|G|0|I'd like a coffee and an orange juice, please.|Ich hätte gerne einen Kaffee und einen Orangensaft, bitte.|aid laik ä KO-fie änd än O-rindsch dschuhs, plies||coffee
+31|G|0|Is there a vegetarian or gluten-free option?|Gibt es eine vegetarische oder glutenfreie Option?|is sär ä we-dsche-TÄ-ri-en or GLU-ten-frie OP-schen||vegetarian
+32|G|0|The bill, please.|Die Rechnung, bitte.|se bill, plies||bill
+33|G|0|Can I pay by credit card?|Kann ich mit Kreditkarte zahlen?|kän ai peh bai KRE-dit kard||credit card
+34|G|0|Room service, please. I'd like to order breakfast.|Zimmerservice, bitte. Ich möchte Frühstück bestellen.|ruhm SÖR-wis, plies. aid laik tu OR-der BREK-fest||order
+35|P|0|Would you like coffee or tea?|Möchten Sie Kaffee oder Tee?|wudd ju laik KO-fie or tie||coffee
+36|P|1|How would you like your eggs?|Wie möchten Sie Ihre Eier (zubereitet)?|hau wudd ju laik jor eggs|wörtlich: „Wie würden Sie Ihre Eier mögen?" — Frage nach der Zubereitung|eggs
+37|P|1|Enjoy your meal!|Guten Appetit!|en-DSCHEU jor miel|wörtlich: „Genießen Sie Ihre Mahlzeit!"|meal
+38|G|0|Can you recommend a good restaurant nearby?|Können Sie ein gutes Restaurant in der Nähe empfehlen?|kän ju re-ko-MEND ä gudd RES-trant NIER-bai||recommend,nearby
+39|G|0|How do I get to the city center?|Wie komme ich ins Stadtzentrum?|hau du ai gett tu se SI-ti SEN-ter||city center
+40|G|0|Could you book a taxi for me tomorrow at 8 a.m.?|Könnten Sie für mich ein Taxi für morgen 8 Uhr buchen?|kudd ju buck ä TÄK-si for mie tu-MO-rou ätt eht eh-emm||book
+41|G|0|What time does the pool open?|Um wie viel Uhr öffnet der Pool?|wott taim das se puhl OU-pen||open
+42|G|0|I lost my room key.|Ich habe meinen Zimmerschlüssel verloren.|ai lost mai ruhm kie||lost
+43|G|0|Can I leave my luggage here after check-out?|Kann ich mein Gepäck nach dem Check-out hier lassen?|kän ai liew mai LA-gidsch hier AF-ter tschek-AUT||luggage
+44|G|0|Do you have a map of the city?|Haben Sie einen Stadtplan?|du ju häff ä mäpp ow se SI-ti||map
+45|P|0|The taxi will be here in 10 minutes.|Das Taxi ist in 10 Minuten hier.|se TÄK-si will bie hier in tenn MI-nits||minutes
+46|P|0|Here is a map and some recommendations.|Hier ist ein Stadtplan und ein paar Empfehlungen.|hier is ä mäpp änd samm re-ko-men-DEH-schens||recommendations
+47|P|0|The shuttle to the airport leaves every hour.|Der Shuttle zum Flughafen fährt jede Stunde.|se SCHAT-tel tu se ÄR-port liews EW-ri AU-er||leaves
+48|G|0|I'd like to check out, please.|Ich möchte auschecken, bitte.|aid laik tu tschek AUT, plies||check out
+49|G|1|Was there any extra charge on my bill?|Gab es zusätzliche Kosten auf meiner Rechnung?|wos sär E-ni EX-tra tschardsch on mai bill|wörtlich: „War da irgendeine Extra-Belastung?" — charge = berechneter Betrag|extra charge
+50|G|1|Thank you, everything was great. I'd like to leave a review.|Danke, alles war super. Ich möchte gerne eine Bewertung hinterlassen.|ßänk ju, EW-ri-ßing wos greht. aid laik tu liew ä re-WJU|wörtlich: „eine Bewertung dalassen" — leave a review = bewerten|review
+V|the reservation|die Reservierung|res-er-WEH-schen
+V|the room key|der Zimmerschlüssel|ruhm kie
+V|the towel|das Handtuch|TAU-el
+V|the pillow|das Kissen|PI-lou
+V|the blanket|die Decke|BLÄN-ket
+V|the luggage|das Gepäck|LA-gidsch
+V|the bill|die Rechnung|bill
+V|the floor|die Etage / der Stock|flor
+V|included|inbegriffen|in-KLU-did
+V|the housekeeping|die Zimmerreinigung|HAUS-kie-ping
+V|to extend|verlängern|ex-TEND
+V|to fix|reparieren|fix
+V|the extra charge|die Zusatzgebühr|EX-tra tschardsch
+V|the front desk|die Rezeption|frant desk
+V|to disturb|stören|dis-TÖRB
+`;
+const SIT_FLUG_TXT=`
+1|G|0|Good morning. I'd like to check in, please.|Guten Morgen. Ich möchte gerne einchecken, bitte.|gud MOR-ning. aid laik tu tschek INN, plies||check
+2|P|0|May I see your passport, please?|Kann ich bitte Ihren Pass sehen?|meh ai sie jor PASS-port, plies||passport
+3|G|1|Here you go.|Bitte sehr, hier ist er.|HIER ju gou|wörtlich: „Hier gehst du" — Bitte sehr / hier, bitte (beim Überreichen)|go
+4|P|0|Do you have any bags to check?|Haben Sie Gepäck zum Aufgeben?|du ju häff EN-ni bägs tu TSCHECK||bags
+5|G|0|Yes, one suitcase and a carry-on.|Ja, einen Koffer und ein Handgepäckstück.|jess, wann SUHT-kehs änd ä KÄ-ri-onn||suitcase, carry-on
+6|P|0|Please put your bag on the scale.|Bitte stellen Sie Ihre Tasche auf die Waage.|plies putt jor bäg on se SKEHL||scale
+7|P|0|Would you like a window or an aisle seat?|Möchten Sie einen Fensterplatz oder einen Gangplatz?|wud ju laik ä WIN-dou or än AIL siet||window, aisle
+8|G|0|A window seat, please.|Einen Fensterplatz, bitte.|ä WIN-dou siet, plies||seat
+9|G|0|Can I take this bag as a carry-on?|Kann ich diese Tasche als Handgepäck mitnehmen?|kän ai tehk sis bäg äs ä KÄ-ri-onn||carry-on
+10|P|0|Here is your boarding pass. Your gate is B22.|Hier ist Ihre Bordkarte. Ihr Gate ist B22.|hier is jor BOR-ding pass. jor GEHT is bie twen-ti-TUH||gate
+11|P|1|You're all set. Have a nice flight!|Alles erledigt. Guten Flug!|jur all SETT. häff ä nais FLAIT|wörtlich: „Sie sind ganz gesetzt" — all set = alles fertig/erledigt|flight
+12|G|0|Excuse me, where is the security check?|Entschuldigung, wo ist die Sicherheitskontrolle?|iks-KJUHS mi, wär is se se-KJU-ri-ti tscheck||security
+13|P|0|Please place your laptop in the bin.|Bitte legen Sie Ihren Laptop in die Wanne.|plies plehs jor LÄPP-topp in se BINN||laptop, bin
+14|P|0|Take off your jacket and your belt, please.|Ziehen Sie bitte Jacke und Gürtel aus.|tehk OFF jor DSCHÄ-kitt änd jor BELT, plies||jacket, belt
+15|G|0|Do I need to take off my shoes?|Muss ich meine Schuhe ausziehen?|du ai nied tu tehk OFF mai SCHUHS||shoes
+16|P|1|No, you can keep them on.|Nein, Sie können sie anlassen.|nou, ju kän KIEP semm ONN|wörtlich: „sie an behalten" — keep on = anbehalten, anlassen|keep
+17|P|0|Please empty your pockets.|Bitte leeren Sie Ihre Taschen.|plies EMP-ti jor PO-kitts||pockets
+18|P|0|Do you have any liquids in your bag?|Haben Sie Flüssigkeiten in Ihrer Tasche?|du ju häff EN-ni LIK-wids in jor BÄGG||liquids
+19|G|0|I have a water bottle. Is that okay?|Ich habe eine Wasserflasche. Ist das in Ordnung?|ai häff ä WO-ter BOT-tel. is sätt ou-KEH||bottle
+20|P|1|I'm afraid you have to throw it away.|Das müssen Sie leider wegwerfen.|aim ä-FREHD ju häff tu srou itt ä-WEH|wörtlich: „Ich fürchte mich" — I'm afraid = leider, tut mir leid|away
+21|P|1|Okay, go ahead.|Okay, gehen Sie durch.|ou-KEH, gou ä-HEDD|wörtlich: „geh voraus" — Sie können weitergehen / nur zu|ahead
+22|P|0|Step over here. I need to check your bag.|Kommen Sie bitte hier rüber. Ich muss Ihre Tasche kontrollieren.|stepp OU-wer hier. ai nied tu TSCHECK jor BÄGG||check
+23|G|0|Sure, no problem.|Klar, kein Problem.|schur, nou PROB-lemm||problem
+24|P|1|You're good to go.|Alles in Ordnung, Sie können weitergehen.|jur GUDD tu GOU|wörtlich: „Sie sind gut zu gehen" — alles okay, Sie dürfen weiter|go
+25|G|0|Excuse me, where is gate B22?|Entschuldigung, wo ist Gate B22?|iks-KJUHS mi, wär is GEHT bie twen-ti-TUH||gate
+26|P|0|Go straight ahead, then turn left.|Gehen Sie geradeaus und dann links.|gou STREHT ä-HEDD, senn törn LEFT||left
+27|G|1|Is the flight on time?|Ist der Flug pünktlich?|is se FLAIT on TAIM|wörtlich: „auf Zeit" — on time = pünktlich|time
+28|P|0|No, your flight is delayed by 30 minutes.|Nein, Ihr Flug hat 30 Minuten Verspätung.|nou, jor flait is di-LEHD bai SÖR-ti MI-nitts||delayed
+29|G|0|When does boarding start?|Wann beginnt das Boarding?|wenn das BOR-ding START||boarding
+30|P|1|This is the final call for flight 230 to London.|Letzter Aufruf für Flug 230 nach London.|sis is se FAI-nel KOLL for flait tu-srie-OU tu LAN-den|wörtlich: „letzter Ruf" — final call = letzter Aufruf, bevor das Gate schließt|final
+31|G|0|Sorry, can you say that again, please?|Entschuldigung, können Sie das bitte noch einmal sagen?|SO-ri, kän ju seh sätt ä-GENN, plies||again
+32|G|0|Here is my boarding pass.|Hier ist meine Bordkarte.|hier is mai BOR-ding pass||boarding
+33|G|0|Thank you for your help.|Danke für Ihre Hilfe.|SÄNK ju for jor HELP||help
+34|P|0|Next, please! Step forward.|Der Nächste, bitte! Treten Sie vor.|NEXT, plies! stepp FOR-word||forward
+35|P|0|Where are you traveling from?|Von wo aus reisen Sie an?|wär ar ju TRÄ-wel-ing fromm||traveling
+36|G|0|I'm coming from Germany.|Ich komme aus Deutschland.|aim KAM-ing fromm DSCHÖR-ma-ni||Germany
+37|P|0|What's the purpose of your visit?|Was ist der Zweck Ihres Besuchs?|wotts se PÖR-pess off jor WI-sitt||purpose
+38|G|0|I'm here on vacation.|Ich bin im Urlaub hier.|aim hier onn we-KEH-schen||vacation
+39|P|0|How long are you going to stay?|Wie lange werden Sie bleiben?|hau LONG ar ju GOU-ing tu STEH||stay
+40|G|0|I'm staying for two weeks.|Ich bleibe zwei Wochen.|aim STEH-ing for tuh WIEKS||weeks
+41|P|0|Where will you be staying?|Wo werden Sie wohnen?|wär will ju bie STEH-ing||staying
+42|G|0|At a hotel in New York.|In einem Hotel in New York.|ätt ä hou-TELL in nju JORK||hotel
+43|P|0|Do you have a return ticket?|Haben Sie ein Rückflugticket?|du ju häff ä ri-TÖRN TI-kitt||return
+44|G|0|Yes, here is my ticket.|Ja, hier ist mein Ticket.|jess, hier is mai TI-kitt||ticket
+45|G|0|Excuse me, where is the baggage claim?|Entschuldigung, wo ist die Gepäckausgabe?|iks-KJUHS mi, wär is se BÄ-gidsch KLEHM||baggage
+46|G|0|My suitcase hasn't arrived.|Mein Koffer ist nicht angekommen.|mai SUHT-kehs HÄS-ent ä-RAIFD||arrived
+47|P|0|Do you have anything to declare?|Haben Sie etwas zu verzollen?|du ju häff EN-ni-sing tu di-KLÄR||declare
+48|G|0|No, I have nothing to declare.|Nein, ich habe nichts zu verzollen.|nou, ai häff NA-sing tu di-KLÄR||nothing
+49|P|0|Please open your suitcase.|Bitte öffnen Sie Ihren Koffer.|plies OU-pen jor SUHT-kehs||suitcase
+50|P|1|All right, you're free to go.|In Ordnung, Sie können gehen.|oll RAIT, jur FRIE tu gou|wörtlich: „Sie sind frei zu gehen" — Sie dürfen weitergehen|free
+V|the boarding pass|die Bordkarte|BOR-ding pass
+V|the passport|der Reisepass|PASS-port
+V|the gate|das Gate / der Flugsteig|geht
+V|the luggage|das Gepäck|LA-gidsch
+V|the carry-on|das Handgepäck|KÄ-ri-onn
+V|the suitcase|der Koffer|SUHT-kehs
+V|the security check|die Sicherheitskontrolle|se-KJU-ri-ti tscheck
+V|the customs|der Zoll|KAS-tems
+V|the flight|der Flug|flait
+V|delayed|verspätet|di-LEHD
+V|the baggage claim|die Gepäckausgabe|BÄ-gidsch klehm
+V|the departure|der Abflug|di-PAR-tscher
+V|the arrival|die Ankunft|ä-RAI-wel
+V|the seat|der Sitzplatz|siet
+V|to declare|verzollen / angeben|di-KLÄR
+`;
+const SIT_REST_TXT=`
+1|G|0|I'd like to book a table for two, please.|Ich möchte einen Tisch für zwei reservieren, bitte.|aid laik tu buck ä TEH-bel for TUH, plies||book,table
+2|P|0|For what time?|Für wie viel Uhr?|for WOTT taim||time
+3|P|0|Do you have a reservation?|Haben Sie eine Reservierung?|du ju häw ä res-er-WEH-schen||reservation
+4|G|0|I have a reservation under the name Smith.|Ich habe eine Reservierung auf den Namen Smith.|ai häw ä res-er-WEH-schen ON-der se nehm SMISS||reservation,name
+5|G|0|A table for two, please.|Einen Tisch für zwei, bitte.|ä TEH-bel for TUH, plies||two
+6|P|1|Right this way, please.|Hier entlang, bitte.|rait siss WEH, plies|wörtlich: „genau diesen Weg" — Folgen Sie mir, hier entlang|way
+7|P|0|Would you like to sit inside or outside?|Möchten Sie drinnen oder draußen sitzen?|wudd ju laik tu sitt in-SAID or aut-SAID||outside
+8|G|0|Could we have a table by the window?|Könnten wir einen Tisch am Fenster haben?|kudd wie häw ä TEH-bel bai se WIN-doh||window
+9|P|0|I'm sorry, we're fully booked tonight.|Es tut mir leid, wir sind heute Abend ausgebucht.|aim SORR-ie, wir ar FULL-ie buckt tu-NAIT||booked,tonight
+10|P|0|Here are your menus.|Hier sind Ihre Speisekarten.|hier ar jor MEN-jus||menus
+11|P|0|Can I get you something to drink?|Kann ich Ihnen etwas zu trinken bringen?|känn ai gett ju SAMM-sing tu DRINK||drink
+12|G|0|Two beers, please.|Zwei Bier, bitte.|tuh BIERS, plies||please
+13|G|0|I'd like a glass of water, please.|Ich hätte gern ein Glas Wasser, bitte.|aid laik ä glahs of WOH-ter, plies||water
+14|G|0|We need a few more minutes.|Wir brauchen noch ein paar Minuten.|wie nied ä fjuh mor MINN-its||minutes
+15|P|0|Are you ready to order?|Sind Sie bereit zu bestellen?|ar ju REDD-ie tu OR-der||ready,order
+16|P|0|Can I take your order?|Kann ich Ihre Bestellung aufnehmen?|känn ai tehk jor OR-der||order
+17|G|1|I'll have the steak, please.|Ich nehme das Steak, bitte.|ail häw se STEHK, plies|wörtlich: „Ich werde das Steak haben" — Ich nehme das Steak (übliche Bestellformel)|steak
+18|G|0|What do you recommend?|Was empfehlen Sie?|wott du ju re-ko-MENND||recommend
+19|P|0|Today's special is grilled salmon.|Unser Tagesgericht heute ist gegrillter Lachs.|tu-dehs SPESCH-el is grilld SÄ-men||salmon,grilled
+20|G|0|Do you have any vegetarian dishes?|Haben Sie vegetarische Gerichte?|du ju häw ENN-ie we-dsche-TÄH-rie-en DISCH-es||vegetarian
+21|G|0|I'm allergic to nuts.|Ich bin allergisch gegen Nüsse.|aim ä-LER-dschick tu NATTS||nuts
+22|G|0|Could I get fries instead of salad?|Könnte ich Pommes statt Salat bekommen?|kudd ai gett FRAIS in-STEDD of SÄL-ed||fries,salad
+23|P|1|How would you like your steak?|Wie möchten Sie Ihr Steak (gebraten)?|hau wudd ju laik jor STEHK|wörtlich: „Wie würden Sie Ihr Steak mögen?" — Frage nach der Garstufe|steak
+24|G|0|Medium, please.|Medium (halb durch), bitte.|MIE-die-am, plies||please
+25|P|0|Would you like anything else?|Möchten Sie noch etwas?|wudd ju laik ENN-ie-sing ELSS||anything
+26|G|0|That's all, thank you.|Das ist alles, danke.|säts OLL, ssänk ju||thank
+27|P|1|Coming right up!|Kommt sofort!|KAMM-ing rait APP|wörtlich: „kommt direkt hoch" — kommt sofort|up
+28|P|1|For here or to go?|Zum Hieressen oder zum Mitnehmen?|for HIER or tu GOH|wörtlich: „für hier oder zum Gehen?" — hier essen oder mitnehmen|go
+29|G|1|To go, please.|Zum Mitnehmen, bitte.|tu GOH, plies|wörtlich: „zum Gehen" — zum Mitnehmen|please
+30|P|0|I'll be right back with your drinks.|Ich bin gleich mit Ihren Getränken zurück.|ail bie rait BÄCK wiss jor DRINKS||drinks
+31|P|1|Here you go.|Bitte sehr. (beim Überreichen)|HIER ju goh|wörtlich: „hier gehen Sie" — bitte sehr, hier ist es|go
+32|P|0|Enjoy your meal!|Guten Appetit!|en-DSCHOI jor MIEL||meal
+33|P|1|How is everything?|Schmeckt Ihnen alles?|hau is EW-rie-sing|wörtlich: „Wie ist alles?" — Schmeckt es? Ist alles in Ordnung?|everything
+34|G|0|Everything is delicious, thank you.|Alles ist köstlich, danke.|EW-rie-sing is de-LISCH-ess, ssänk ju||delicious
+35|G|0|Could we have some more bread, please?|Könnten wir noch etwas Brot bekommen, bitte?|kudd wie häw samm mor BREDD, plies||bread
+36|G|0|Excuse me, could I have another fork?|Entschuldigung, könnte ich eine andere Gabel haben?|ex-KJUHS mie, kudd ai häw ä-NA-ser FORK||fork
+37|G|0|Excuse me, this isn't what I ordered.|Entschuldigung, das habe ich nicht bestellt.|ex-KJUHS mie, siss IS-ent wott ai OR-derd||ordered
+38|G|0|I'm sorry, but my food is cold.|Entschuldigung, aber mein Essen ist kalt.|aim SORR-ie, batt mai fuhd is KOHLD||food,cold
+39|P|0|I'm so sorry, I'll fix that right away.|Das tut mir sehr leid, ich kümmere mich sofort darum.|aim soh SORR-ie, ail FIX sätt rait ä-WEH||away
+40|P|1|It's on the house.|Das geht aufs Haus.|itts onn se HAUS|wörtlich: „es ist auf dem Haus" — das Lokal zahlt, es ist gratis|house
+41|G|1|Could you wrap this up, please?|Könnten Sie das (zum Mitnehmen) einpacken, bitte?|kudd ju räpp siss APP, plies|wörtlich: „das hoch-einwickeln" — Reste zum Mitnehmen einpacken|wrap
+42|P|0|Would you like any dessert?|Möchten Sie einen Nachtisch?|wudd ju laik ENN-ie de-SERT||dessert
+43|G|0|No, thank you. Just the check, please.|Nein, danke. Nur die Rechnung, bitte.|noh, ssänk ju. dschast se TSCHECK, plies||check
+44|P|0|Together or separate?|Zusammen oder getrennt?|tu-GE-ser or SEP-rett||separate
+45|G|0|Can we split the bill?|Können wir die Rechnung teilen?|känn wie splitt se BILL||split,bill
+46|P|0|How would you like to pay?|Wie möchten Sie bezahlen?|hau wudd ju laik tu PEH||pay
+47|G|0|Can I pay by card?|Kann ich mit Karte zahlen?|känn ai peh bai KARD||card
+48|G|0|Is the tip included?|Ist das Trinkgeld inbegriffen?|is se TIPP in-KLU-didd||tip,included
+49|P|0|Here's your change.|Hier ist Ihr Wechselgeld.|hiers jor TSCHEHNDSCH||change
+50|G|1|Keep the change.|Stimmt so. (Der Rest ist Trinkgeld.)|kiep se TSCHEHNDSCH|wörtlich: „Behalten Sie das Wechselgeld" — Stimmt so, Rest als Trinkgeld|change
+V|the menu|die Speisekarte|se MEN-ju
+V|the waiter|der Kellner|se WEH-ter
+V|the table|der Tisch|se TEH-bel
+V|the bill|die Rechnung (brit.)|se BILL
+V|the check|die Rechnung (amerik.)|se TSCHECK
+V|the tip|das Trinkgeld|se TIPP
+V|the starter|die Vorspeise|se STAR-ter
+V|the main course|das Hauptgericht|se MEHN kors
+V|the dessert|der Nachtisch|se de-SERT
+V|the drink|das Getränk|se DRINK
+V|the water|das Wasser|se WOH-ter
+V|the fork|die Gabel|se FORK
+V|the knife|das Messer|se NAIF
+V|the spoon|der Löffel|se SPUHN
+V|delicious|köstlich, lecker|de-LISCH-ess
+`;
+const SIT_TAXI_TXT=`
+1|G|0|Excuse me, where can I get a taxi?|Entschuldigung, wo bekomme ich ein Taxi?|iks-KJUHS mie, wär känn ai gett ä TÄK-si||taxi
+2|G|0|Is there a taxi stand near here?|Gibt es hier in der Nähe einen Taxistand?|is där ä TÄK-si ständ nier hier||stand,near
+3|G|0|Could you call a taxi for me, please?|Könnten Sie mir bitte ein Taxi rufen?|kudd ju kohl ä TÄK-si for mie, plies||call
+4|G|0|I'd like to book a taxi for 8 a.m., please.|Ich möchte bitte ein Taxi für 8 Uhr morgens buchen.|aid laik tu buck ä TÄK-si for eht eh-emm, plies||book
+5|P|1|I'll pick you up in five minutes.|Ich hole Sie in fünf Minuten ab.|ail pick ju app inn faiw MI-nitts|wörtlich: „Ich werde Sie hochpicken" — „pick up" = jemanden abholen|minutes
+6|G|0|Are you free?|Sind Sie frei?|ar ju frie||free
+7|G|0|Hi, are you my Uber driver?|Hallo, sind Sie mein Uber-Fahrer?|hai, ar ju mai UH-ber DRAI-wer||driver
+8|P|0|Yes. What's your name, please?|Ja. Wie ist Ihr Name, bitte?|jess. watts jur nehm, plies||name
+9|P|1|Hop in.|Steigen Sie ein.|hopp inn|wörtlich: „Hüpf hinein" — lockere Einladung, einzusteigen|Hop
+10|P|1|Where to?|Wohin soll's gehen?|wär tu|wörtlich: „Wohin zu?" — Kurzform von „Where are you heading?"|to
+11|G|0|To the airport, please.|Zum Flughafen, bitte.|tu se ÄR-port, plies||airport
+12|G|0|Can you take me to this address?|Können Sie mich zu dieser Adresse bringen?|känn ju tehk mie tu sis ä-DRESS||address
+13|G|0|The train station, please.|Zum Bahnhof, bitte.|se trehn STEH-schen, plies||station
+14|P|0|Sure, no problem.|Klar, kein Problem.|schur, no PRO-blemm||problem
+15|P|1|Need a hand with your bags?|Brauchen Sie Hilfe mit Ihren Taschen?|niehd ä händ wis jur bäggs|wörtlich: „Brauchen Sie eine Hand?" — „a hand" = Hilfe|hand,bags
+16|G|0|Could you put my suitcase in the trunk?|Könnten Sie meinen Koffer in den Kofferraum legen?|kudd ju putt mai SUHT-kehs inn se trank||suitcase,trunk
+17|G|0|How much will it cost?|Wie viel wird es kosten?|hau matsch will itt kost||cost
+18|P|0|It's about thirty dollars.|Es kostet ungefähr dreißig Dollar.|itts ä-BAUT SÖR-ti DOL-lers||thirty,dollars
+19|G|0|Do you use the meter?|Fahren Sie nach Taxameter?|du ju juhs se MIE-ter||meter
+20|P|0|Please put on your seat belt.|Bitte schnallen Sie sich an.|plies putt onn jur SIET belt||seat,belt
+21|P|0|Which terminal do you need?|Welches Terminal brauchen Sie?|witsch TÖR-mi-nell du ju niehd||need
+22|G|0|Terminal two, please.|Terminal zwei, bitte.|TÖR-mi-nell tuh, plies||two
+23|G|0|I'm in a hurry, please take the fastest way.|Ich bin in Eile, bitte nehmen Sie den schnellsten Weg.|aim inn ä HÖR-ri, plies tehk se FAS-test weh||hurry,fastest
+24|P|0|Is this your first time here?|Sind Sie zum ersten Mal hier?|is sis jur först taim hier||first,time
+25|G|0|Yes, we arrived yesterday.|Ja, wir sind gestern angekommen.|jess, wie ä-RAIWD JESS-ter-deh||arrived,yesterday
+26|P|0|Where are you from?|Woher kommen Sie?|wär ar ju fromm||from
+27|G|0|We're from Germany.|Wir kommen aus Deutschland.|wier fromm DSCHÖR-mä-ni||Germany
+28|P|0|How long are you staying?|Wie lange bleiben Sie?|hau long ar ju STEH-jing||staying
+29|G|0|Just one week.|Nur eine Woche.|dschast wann wiek||week
+30|P|1|It's rush hour, sorry about the traffic.|Es ist Stoßzeit, entschuldigen Sie den Verkehr.|itts rasch AU-er, SO-ri ä-BAUT se TRÄ-fick|wörtlich: „Eil-Stunde" — „rush hour" = Stoßzeit, Berufsverkehr|traffic
+31|G|0|How long will it take?|Wie lange wird es dauern?|hau long will itt tehk||take
+32|P|0|About twenty minutes.|Ungefähr zwanzig Minuten.|ä-BAUT TWENN-ti MI-nitts||twenty,minutes
+33|G|0|Can we make a quick stop, please?|Können wir bitte kurz anhalten?|känn wie mehk ä kwick stopp, plies||stop
+34|G|0|Could you slow down a little, please?|Könnten Sie bitte etwas langsamer fahren?|kudd ju slou daun ä LI-tell, plies||slow
+35|G|0|Could you turn the music down, please?|Könnten Sie die Musik leiser machen?|kudd ju törn se MJU-sick daun, plies||music
+36|G|0|Can I open the window?|Kann ich das Fenster öffnen?|känn ai OH-pen se WIN-dou||window
+37|P|1|We'll be there in no time.|Wir sind ganz schnell da.|wiel bie där inn no taim|wörtlich: „in keiner Zeit" — sehr schnell, sofort|time
+38|G|0|Is it still far?|Ist es noch weit?|is itt still far||far
+39|P|0|It's just around the corner.|Es ist gleich um die Ecke.|itts dschast ä-RAUND se KOR-ner||corner
+40|P|1|Here we are.|Wir sind da.|hier wie ar|wörtlich: „Hier wir sind" — Wir sind angekommen|are
+41|G|1|You can drop me off here.|Sie können mich hier absetzen.|ju känn dropp mie off hier|wörtlich: „mich hier abfallen lassen" — „drop off" = jemanden absetzen|drop
+42|G|0|Please stop over there, on the right.|Bitte halten Sie da drüben, rechts.|plies stopp OH-wer där, onn se rait||right
+43|G|0|How much do I owe you?|Wie viel schulde ich Ihnen?|hau matsch du ai oh ju||owe
+44|P|1|That'll be eighteen fifty.|Das macht achtzehn fünfzig.|sätt-ll bie EH-tien FIF-ti|wörtlich: „Das wird sein …" — „That'll be" = Das macht … (Preisansage)|eighteen
+45|G|0|Can I pay by card?|Kann ich mit Karte zahlen?|känn ai peh bai kard||card
+46|P|0|Sorry, we take cash only.|Tut mir leid, wir nehmen nur Bargeld.|SO-ri, wie tehk käsch OHN-li||cash
+47|G|1|Keep the change.|Stimmt so.|kiep se tschehndsch|wörtlich: „Behalten Sie den Wechsel" — Stimmt so (mit Trinkgeld)|change
+48|G|0|Could I have a receipt, please?|Könnte ich bitte eine Quittung bekommen?|kudd ai häw ä ri-SIET, plies||receipt
+49|P|1|Watch your step getting out.|Vorsicht beim Aussteigen.|watsch jur stepp GE-ting aut|wörtlich: „Beobachten Sie Ihren Schritt" — Achtung, Vorsicht beim Gehen|step
+50|G|0|Thanks for the ride!|Danke fürs Fahren!|sänks for se raid||ride
+V|the taxi|das Taxi|TÄK-si
+V|the driver|der Fahrer|DRAI-wer
+V|the fare|der Fahrpreis|fär
+V|the meter|das Taxameter|MIE-ter
+V|the taxi stand|der Taxistand|TÄK-si ständ
+V|the airport|der Flughafen|ÄR-port
+V|the address|die Adresse|ä-DRESS
+V|the trunk|der Kofferraum|trank
+V|the seat belt|der Sicherheitsgurt|SIET belt
+V|the traffic|der Verkehr|TRÄ-fick
+V|the receipt|die Quittung|ri-SIET
+V|the change|das Wechselgeld|tschehndsch
+V|the tip|das Trinkgeld|tipp
+V|cash|das Bargeld|käsch
+V|the ride|die Fahrt|raid
+`;
+const SIT_TOUR_TXT=`
+1|G|0|Excuse me, where is the tourist information?|Entschuldigung, wo ist die Touristeninformation?|ex-KJUHS mi, wär is se TUH-rist in-for-MEH-schen||information
+2|P|0|Hello, can I help you?|Hallo, kann ich Ihnen helfen?|he-LOU, känn ai HELP ju||help
+3|G|0|Do you have a map of the city?|Haben Sie einen Stadtplan?|du ju häff ä mäpp ow se SI-ti||map
+4|P|0|Here is a map and some recommendations.|Hier ist ein Stadtplan und ein paar Empfehlungen.|hier is ä mäpp änd samm re-ko-men-DEH-schens||recommendations
+5|G|0|Do you have any brochures in German?|Haben Sie Broschüren auf Deutsch?|du ju häff Ä-ni BROU-schers in DSCHÖR-men||brochures
+6|P|1|Here you are.|Bitte schön.|HIER ju ar|wörtlich: „Hier sind Sie" — gemeint: „Bitte schön" (beim Überreichen)|are
+7|G|0|And where are the toilets?|Und wo sind die Toiletten?|änd wär ar se TOI-letts||toilets
+8|G|0|What is there to see here?|Was gibt es hier zu sehen?|wott is sär tu SIE hier||see
+9|G|0|What do you recommend?|Was empfehlen Sie?|wott du ju re-ko-MEND||recommend
+10|P|1|The old town is definitely worth a visit.|Die Altstadt ist auf jeden Fall einen Besuch wert.|se ould TAUN is DE-fi-nit-li WÖRS ä WI-sit|wörtlich: „wert einen Besuch" — gemeint: Es lohnt sich, dort hinzugehen|worth,visit
+11|G|0|What are the main sights?|Was sind die wichtigsten Sehenswürdigkeiten?|wott ar se MEHN SAITS||sights
+12|P|0|You should visit the castle and the cathedral.|Sie sollten das Schloss und die Kathedrale besuchen.|ju schudd WI-sit se KAH-ßel änd se kä-THIE-drel||castle
+13|G|1|We also want to check out the market.|Wir wollen uns auch den Markt ansehen.|wi OHL-ßou wont tu tschek AUT se MAR-kit|wörtlich: „auschecken" — gemeint: sich etwas ansehen, vorbeischauen|check,market
+14|G|0|Is it far from here?|Ist es weit von hier?|is it FAR from HIER||far
+15|P|1|No, it's just around the corner.|Nein, es ist gleich um die Ecke.|nou, itts dschast ä-RAUND se KOR-ner|wörtlich: „gerade um die Ecke herum" — gemeint: ganz in der Nähe|corner
+16|G|0|How long does it take to get there?|Wie lange braucht man dorthin?|hau LONG das it TEHK tu gett sär||take
+17|P|1|It's a five-minute walk.|Es sind fünf Minuten zu Fuß.|itts ä FAIF-mi-nit WOHK|wörtlich: „ein Fünf-Minuten-Spaziergang" — gemeint: nur fünf Minuten zu Fuß|walk
+18|G|0|Is there a bus to the city centre?|Fährt ein Bus ins Stadtzentrum?|is sär ä BASS tu se SI-ti SEN-ter||bus
+19|P|0|Yes, take the number five.|Ja, nehmen Sie die Linie fünf.|jess, TEHK se NAM-ber faif||five
+20|G|0|Can you recommend a good restaurant?|Können Sie ein gutes Restaurant empfehlen?|känn ju re-ko-MEND ä gudd RES-to-rant||restaurant
+21|G|0|What are the opening hours of the museum?|Was sind die Öffnungszeiten des Museums?|wott ar se OU-pe-ning AU-ers ow se mju-SIE-um||opening,hours
+22|P|0|It's open from nine to five.|Es ist von neun bis fünf geöffnet.|itts OU-pen from NAIN tu FAIF||nine
+23|G|0|Is it open on Sundays?|Ist es sonntags geöffnet?|is it OU-pen on SANN-dehs||Sundays
+24|P|0|It's closed on Mondays.|Montags ist es geschlossen.|itts KLOUSD on MANN-dehs||Mondays
+25|G|0|How much does it cost?|Wie viel kostet das?|hau MATSCH das it KOST||cost
+26|P|0|A ticket costs ten pounds.|Eine Eintrittskarte kostet zehn Pfund.|ä TI-ket kosts TENN PAUNDS||pounds
+27|G|0|Is it free for children?|Ist es für Kinder kostenlos?|is it FRIE for TSCHILL-dren||free,children
+28|G|0|Are there any guided tours?|Gibt es Führungen?|ar sär Ä-ni GAI-did TUHRS||guided,tours
+29|P|0|There is a city tour every day at ten.|Es gibt jeden Tag um zehn eine Stadtführung.|sär is ä SI-ti tuhr EW-ri deh ätt TENN||tour
+30|P|1|You can also take the hop-on hop-off bus.|Sie können auch den Hop-on-Hop-off-Bus nehmen.|ju känn OHL-ßou tehk se HOPP-on HOPP-off BASS|wörtlich: „Aufspring-Abspring-Bus" — gemeint: Sightseeing-Bus, bei dem man überall ein- und aussteigen kann|hop-on
+31|G|0|Can I buy tickets here?|Kann ich hier Tickets kaufen?|känn ai BAI TI-ketts HIER||tickets
+32|G|0|Where does the tour start?|Wo startet die Tour?|wär das se TUHR start||start
+33|P|0|The tour starts at the main square.|Die Tour beginnt am Hauptplatz.|se TUHR starts ätt se MEHN SKWÄR||square
+34|G|0|Excuse me, how do I get to the station?|Entschuldigung, wie komme ich zum Bahnhof?|ex-KJUHS mi, hau du ai GETT tu se STEH-schen||station
+35|G|0|Can you show me on the map?|Können Sie es mir auf dem Stadtplan zeigen?|känn ju SCHOU mi on se MÄPP||show
+36|P|0|Go straight ahead.|Gehen Sie geradeaus.|gou ßtreht ä-HEDD||ahead
+37|P|0|Turn left at the traffic lights.|Biegen Sie an der Ampel links ab.|törn LEFT ätt se TRÄ-fik laits||traffic,lights
+38|P|0|Turn right at the church.|Biegen Sie an der Kirche rechts ab.|törn RAIT ätt se TSCHÖRTSCH||church
+39|P|0|Take the second street on the left.|Nehmen Sie die zweite Straße links.|tehk se SSE-kend ßTRIET on se LEFT||second,street
+40|P|0|Go past the supermarket.|Gehen Sie am Supermarkt vorbei.|gou PAHST se SUH-per-mar-kit||supermarket
+41|P|0|Cross the bridge and then turn left.|Überqueren Sie die Brücke und biegen Sie dann links ab.|KROSS se BRIDSCH änd senn törn LEFT||bridge
+42|P|0|It's on your right.|Es ist auf der rechten Seite.|itts on jor RAIT||right
+43|P|1|It's right in front of you.|Es ist direkt vor Ihnen.|itts RAIT in FRONNT ow ju|wörtlich: „rechts/richtig vor Ihnen" — „right" heißt hier „direkt, genau"|front
+44|P|1|You can't miss it.|Sie können es nicht verfehlen.|ju KAHNT MISS it|wörtlich: „Sie können es nicht verpassen" — gemeint: Sie finden es ganz sicher|miss
+45|G|1|Is it within walking distance?|Kann man zu Fuß dorthin gehen?|is it wi-SINN WOH-king DIS-tens|wörtlich: „innerhalb der Geh-Entfernung" — gemeint: nah genug, um zu laufen|walking,distance
+46|P|0|It's about ten minutes from here.|Es ist etwa zehn Minuten von hier.|itts ä-BAUT tenn MI-nits from HIER||minutes
+47|G|0|Sorry, can you say that again, please?|Entschuldigung, können Sie das bitte noch einmal sagen?|SO-ri, känn ju ßeh sätt ä-GENN, plies||again
+48|G|0|So I turn left at the corner, is that right?|Also links an der Ecke abbiegen, richtig?|ßou ai törn LEFT ätt se KOR-ner, is sätt RAIT||corner
+49|G|0|Thank you so much for your help!|Vielen Dank für Ihre Hilfe!|ßänk ju ßou MATSCH for jor HELP||help
+50|P|1|You're welcome. Enjoy your stay!|Gern geschehen. Genießen Sie Ihren Aufenthalt!|jur WEL-kamm. en-DSCHOI jor STEH|wörtlich: „Sie sind willkommen" — gemeint: „Gern geschehen"|stay
+V|the map|der Stadtplan|mäpp
+V|the sight|die Sehenswürdigkeit|sait
+V|the tour|die Tour, die Führung|tuhr
+V|the ticket|die Eintrittskarte|TI-ket
+V|the brochure|die Broschüre|BROU-scher
+V|the church|die Kirche|tschörtsch
+V|the castle|das Schloss|KAH-ßel
+V|the museum|das Museum|mju-SIE-um
+V|the square|der Platz|skwär
+V|the corner|die Ecke|KOR-ner
+V|the traffic lights|die Ampel|TRÄ-fik laits
+V|the bridge|die Brücke|bridsch
+V|left|links|left
+V|right|rechts|rait
+V|straight ahead|geradeaus|ßtreht ä-HEDD
+`;
+const SIT_CAT_PREFIX="📍 Situation: ";
+const SIT_DEFS=[{key:"hotel",icon:"🏨",name:"Hotel",txt:SIT_HOTEL_TXT},{key:"flughafen",icon:"🛫",name:"Flughafen",txt:SIT_FLUG_TXT},{key:"restaurant",icon:"🍽️",name:"Restaurant",txt:SIT_REST_TXT},{key:"taxi",icon:"🚕",name:"Taxi",txt:SIT_TAXI_TXT},{key:"touristeninfo",icon:"ℹ️",name:"Touristeninfo",txt:SIT_TOUR_TXT}];
+function buildSitDeck(def){const out=[];let vi=0;deckLines(def.txt).forEach(function(l){const f=l.split("|");
+  if(f[0]==="V"){vi++;out.push({id:"sit-"+def.key+"-v"+String(vi).padStart(2,"0"),en:f[1],de:f[2],pron:f[3]||"",ex_en:"",ex_de:"",cat:SIT_CAT_PREFIX+def.name,sit:def.key,rank:200+vi,core:false,example:false});return;}
+  const r=parseInt(f[0],10)||0;
+  out.push({id:"sit-"+def.key+"-"+String(r).padStart(3,"0"),en:f[3],de:f[4],pron:f[5]||"",ex_en:"",ex_de:"",cat:SIT_CAT_PREFIX+def.name,type:"situation",sit:def.key,role:f[1],idiom:f[2]==="1",lit:f[6]||"",gap:String(f[7]||"").split(",").map(function(s){return s.trim();}).filter(Boolean),rank:r,core:false,example:false});});return out;}
+const SIT_DECKS=CUR_LANG!=="en"?{}:SIT_DEFS.reduce(function(a,d){a[d.key]=buildSitDeck(d);return a;},{});
 const LEVEL_DECK=[];
 function _addLevel(cefr,cat,t){deckLines(t).forEach(function(l,i){var f=l.split("|");LEVEL_DECK.push({id:"lv-"+cefr.toLowerCase()+"-"+String(i+1).padStart(3,"0"),cefr:cefr,cat:cat,core:true,example:false,rank:i+1,en:f[0],de:f[1],pron:f[2]||"",ex_en:f[3]||"",ex_de:f[4]||""});});}
 if(CUR_LANG==="en")["A1","A2","B1","B2","C1","C2"].forEach(function(cf){_addLevel(cf,"Wortschatz "+cf,LEVEL_TXT[cf]);});
@@ -2566,8 +2917,8 @@ const TOPIC_CATCHALL="Sonstiges";
 const TOPIC_SET=new Set(TOPICS);
 // alte/rohe Kategorienamen -> neues Themen-Set (deterministisch, ohne KI)
 const CAT_TO_TOPIC={"Reisen":"Reisen","Reise":"Reisen","Flughafen":"Flughafen & Flug","Flug":"Flughafen & Flug","Flughafen & Flug":"Flughafen & Flug","Hotel":"Hotel","Unterkunft":"Hotel","Restaurant":"Restaurant & Essen","Essen":"Restaurant & Essen","Restaurant & Essen":"Restaurant & Essen","Verkehr":"Auto & Verkehr","Auto":"Auto & Verkehr","Auto & Verkehr":"Auto & Verkehr","Einkaufen":"Einkaufen","Shopping":"Einkaufen","Smalltalk":"Smalltalk","Begrüßung":"Smalltalk","Begruessung":"Smalltalk","Gefuehle":"Gefühle & Meinung","Gefühle":"Gefühle & Meinung","Familie":"Menschen & Familie","Menschen":"Menschen & Familie","Zahlen":"Zeit & Zahlen","Zeit":"Zeit & Zahlen","Verben":"Aktionen & Verben","Adjektive":"Beschreiben & Eigenschaften","Gesundheit":"Gesundheit","Nachrichten":"Nachrichten","Politik":"Nachrichten","Arbeit":"Arbeit","Beruf":"Arbeit","Bildung":"Arbeit","Natur":"Natur & Wetter","Wetter":"Natur & Wetter","Natur & Wetter":"Natur & Wetter","Zuhause":"Alltag & Zuhause","Alltag":"Alltag & Zuhause","Technik":"Alltag & Zuhause","Alltag & Zuhause":"Alltag & Zuhause"};
-function isStructuralCat(c){return !!(c&&(c.core||c.type==="grammatik"||c.cat==="Grundwortschatz"||/^Grammatik/.test(c.cat||"")||/^Wortschatz /.test(c.cat||"")));}
-function structLabel(c){if(/^Grammatik/.test(c.cat||""))return "Grammatik";if(/^Wortschatz /.test(c.cat||""))return "Niveau-Wortschatz";return "Grundwortschatz";}
+function isStructuralCat(c){return !!(c&&(c.core||c.type==="grammatik"||c.cat==="Grundwortschatz"||/^Grammatik/.test(c.cat||"")||/^Wortschatz /.test(c.cat||"")||/^📍 /.test(c.cat||"")));}
+function structLabel(c){if(/^Grammatik/.test(c.cat||""))return "Grammatik";if(/^Wortschatz /.test(c.cat||""))return "Niveau-Wortschatz";if(/^📍 /.test(c.cat||""))return "Situation";return "Grundwortschatz";}
 // Anzeige-Thema einer Karte. null = Struktur-Kategorie (Grundwortschatz/Grammatik) → erscheint NICHT im Themen-Diagramm.
 function topicOf(c){
   if(!c)return TOPIC_CATCHALL;
@@ -2749,7 +3100,8 @@ function buildSession(extraFilter,scopeOverride){
   const twk=shuffle(cards.filter(c=>trWeak[c.id]&&!_wIds.has(c.id)&&statusOf(c.id)!=="neu")); // v50: Übersetzungs-Schwächen (aus Diktat) vorziehen
   const newCore=cards.filter(c=>statusOf(c.id)==="neu"&&c.core).sort((a,b)=>(a.rank||9999)-(b.rank||9999)); // Grundwortschatz nach Häufigkeit
   const newGram=cards.filter(c=>statusOf(c.id)==="neu"&&c.type==="grammatik"&&(!gate||(c.lvlMin||1)<=li+1)).sort((a,b)=>(a.rank||9999)-(b.rank||9999)); // Grammatik nur bis aktuelles Level (+1)
-  const newOther=shuffle(cards.filter(c=>statusOf(c.id)==="neu"&&!c.core&&c.type!=="grammatik"));
+  const _noArr=cards.filter(c=>statusOf(c.id)==="neu"&&!c.core&&c.type!=="grammatik");
+  const newOther=(typeof SIT_CAT_PREFIX!=="undefined"&&ui.cat&&ui.cat.indexOf(SIT_CAT_PREFIX)===0)?_noArr.sort((a,b)=>(a.rank||9999)-(b.rank||9999)):shuffle(_noArr); // v66: in Situationen nach typischem Ablauf (rank)
   const merged=[];let i=0,j=0;                                       // Kern & Grammatik verschränken (~2:1), damit beides eingeführt wird
   while(i<newCore.length||j<newGram.length){if(i<newCore.length)merged.push(newCore[i++]);if(i<newCore.length)merged.push(newCore[i++]);if(j<newGram.length)merged.push(newGram[j++]);}
   const news=ui.srcFilter?newOther.concat(merged):merged.concat(newOther);  // Transkript-Modus: Inhaltswörter (nicht Grundwortschatz) zuerst
@@ -2944,7 +3296,7 @@ function activate(tab){
 }
 
 function isTranscriptVocab(c){return !!(c&&c.source&&c.source!=="Import"&&c.source!=="Immersion"&&!c.core&&c.type!=="grammatik");} // „Immersion"-Wörter (USA-Modus/Klick-Wörterbuch) sind KEINE Transkript-Vokabeln → vom Transkript-Schalter unberührt
-function latestTranscriptTitle(){const ks=Object.keys(scripts||{});if(!ks.length)return null;let best=null,bd="-";ks.forEach(k=>{const s=scripts[k];if(s&&String(s.lastLoaded||"")>=bd){bd=String(s.lastLoaded||"");best=s.title;}});return best||(scripts[ks[ks.length-1]]&&scripts[ks[ks.length-1]].title)||null;}
+function latestTranscriptTitle(){const ks=Object.keys(scripts||{});if(!ks.length)return null;let best=null,bd="-";ks.forEach(k=>{const s=scripts[k];if(s&&!s.dup&&String(s.lastLoaded||"")>=bd){bd=String(s.lastLoaded||"");best=s.title;}});return best||(scripts[ks[ks.length-1]]&&scripts[ks[ks.length-1]].title)||null;}
 function quickStart(scope){boost=null;activeRun=false;ui.scope=scope;ui.srcFilter=null;ui.cat="Alle";save(K.ui,ui);activate("flashcards");} // Schnellstart = global: haengende Kategorie/Transkript-Filter zuruecksetzen
 // 📚 Direkt neue Grundwortschatz-Woerter lernen – setzt alle haengenden Filter zurueck und erzwingt Kategorie „Grundwortschatz".
 function learnCore(){
@@ -2964,7 +3316,7 @@ function listenTranscript(title,mode){boost=null;activeRun=false;ui.srcFilter=ti
 // Scrollbare Liste aller geladenen Transkripte (nach Datum sortiert) mit Üben-/Hör-Buttons.
 function renderTranscripts(){
   const body=byId("transcriptsBody"),cnt=byId("trCount");if(!body)return;
-  const entries=Object.keys(scripts||{}).map(k=>({path:k,sc:scripts[k]||{},p:parseScriptTitle((scripts[k]||{}).title||"")}));
+  const entries=Object.keys(scripts||{}).filter(k=>!(scripts[k]&&scripts[k].dup)).map(k=>({path:k,sc:scripts[k]||{},p:parseScriptTitle((scripts[k]||{}).title||"")}));
   if(cnt)cnt.textContent=entries.length?(entries.length+(entries.length===1?" Transkript":" Transkripte")):"";
   if(!entries.length){body.innerHTML='<div class="muted" style="font-size:13px;padding:6px 0">Noch keine Transkripte geladen. Lade unten eines mit „📄 Neues Script laden". 🎬</div>';return;}
   entries.sort((a,b)=>{const da=a.p.date||a.sc.lastLoaded||"",db=b.p.date||b.sc.lastLoaded||"";if(db!==da)return db<da?-1:1;return a.p.name.toLowerCase()<b.p.name.toLowerCase()?-1:1;});
@@ -3004,7 +3356,7 @@ function buildFilterBar(){
   const all=allCards();
   const topics=TOPICS.filter(t=>all.some(c=>topicOf(c)===t));
   if(all.some(c=>topicOf(c)===TOPIC_CATCHALL))topics.push(TOPIC_CATCHALL);
-  const structs=Array.from(new Set(all.map(c=>c.cat))).filter(c=>c==="Grundwortschatz"||/^Grammatik/.test(c)||/^Wortschatz /.test(c));
+  const structs=Array.from(new Set(all.map(c=>c.cat))).filter(c=>c==="Grundwortschatz"||/^Grammatik/.test(c)||/^Wortschatz /.test(c)||/^📍 /.test(c));
   const cats=["Alle"].concat(all.some(c=>c.chunk)?[CHUNK_CAT]:[],topics,structs);
   if(ui.cat&&ui.cat!=="Alle"&&cats.indexOf(ui.cat)<0)cats.splice(1,0,ui.cat);   // alte/abweichende Auswahl sichtbar halten
   byId("fCat").innerHTML=cats.map(c=>`<option ${c===ui.cat?"selected":""}>${esc(c)}</option>`).join("");
@@ -3087,14 +3439,17 @@ function renderFlash(){
   if(!fcSess||fcSess.total===0){area.innerHTML=noCardsMsg();return;}
   if(sessFinished(fcSess)){area.innerHTML=sessionDone(fcSess.total);return;}
   const c=fcSess.list[fcSess.i];const dir=ui.dir;lastShownTs=Date.now();
-  const head=sessHead(fcSess,c,`<span class="pill ${STATUS_CLASS[statusOf(c.id)]}">${STATUS_LABEL[statusOf(c.id)]}</span>`);
+  const sitX=c.type==="situation"?`<span class="pill ${c.role==="P"?"p-gut":"p-neu"}" title="${c.role==="P"?"Sagt das Personal – verstehen reicht":"Sagst du selbst"}">${c.role==="P"?"🛎️ Personal":"🧳 Du"}</span>${c.idiom?'<span class="pill p-schwach" title="Sinngemäße Redewendung – nicht wörtlich übersetzen">💬 Redewendung</span>':""}`:"";
+  const wsty=c.type==="situation"?' style="font-size:21px;line-height:1.35"':"";
+  const litLine=(c.type==="situation"&&c.idiom&&c.lit)?`<div class="ex" style="margin-top:6px">💬 ${esc(c.lit)}</div>`:"";
+  const head=sessHead(fcSess,c,sitX+`<span class="pill ${STATUS_CLASS[statusOf(c.id)]}">${STATUS_LABEL[statusOf(c.id)]}</span>`);
   const spk=`<button class="iconbtn spk" title="anhören">🔊</button>`;
   const front = dir==="en2de"
-    ? `<div class="word">${esc(c.en)}</div><div class="row center" style="justify-content:center">${spk}<span class="pron">${esc(c.pron)}</span></div>`
-    : `<div class="word">${esc(c.de)}</div>`;
+    ? `<div class="word"${wsty}>${esc(c.en)}</div><div class="row center" style="justify-content:center">${spk}<span class="pron">${esc(c.pron)}</span></div>`
+    : `<div class="word"${wsty}>${esc(c.de)}</div>`;
   const back = dir==="en2de"
-    ? `<div class="word" style="font-size:24px">${esc(c.de)}</div>${c.ex_en?`<div class="ex">„${esc(c.ex_en)}"<br>${esc(c.ex_de||"")}</div>`:""}`
-    : `<div class="word">${esc(c.en)}</div><div class="row center" style="justify-content:center">${spk}<span class="pron">${esc(c.pron)}</span></div>${c.ex_en?`<div class="ex">„${esc(c.ex_en)}"</div>`:""}`;
+    ? `<div class="word" style="font-size:${c.type==="situation"?"20px":"24px"}">${esc(c.de)}</div>${litLine}${c.ex_en?`<div class="ex">„${esc(c.ex_en)}"<br>${esc(c.ex_de||"")}</div>`:""}`
+    : `<div class="word"${wsty}>${esc(c.en)}</div><div class="row center" style="justify-content:center">${spk}<span class="pron">${esc(c.pron)}</span></div>${litLine}${c.ex_en?`<div class="ex">„${esc(c.ex_en)}"</div>`:""}`;
   area.innerHTML=`${head}
     ${autoChkHTML("fcAuto","autoFlash","Vokabel automatisch vorlesen")}
     <div class="fc" id="fcCard"><div class="fc-inner">
@@ -3147,13 +3502,15 @@ function renderMC(){
   if(sessFinished(mcSess)){area.innerHTML=sessionDone(mcSess.total);return;}
   const c=mcSess.list[mcSess.i];const dir=ui.dir;lastShownTs=Date.now();
   const askField=dir==="en2de"?"en":"de",ansField=dir==="en2de"?"de":"en";
-  const distract=shuffle(pool.filter(x=>x.id!==c.id&&x[ansField]!==c[ansField])).slice(0,3);
+  let _dp=pool.filter(x=>x.id!==c.id&&x[ansField]!==c[ansField]);
+  if(c.type==="situation"){const _sp=_dp.filter(x=>x.type==="situation");if(_sp.length>=3)_dp=_sp;} // v66: Satz-Distraktoren bevorzugt aus Situationen
+  const distract=shuffle(_dp).slice(0,3);
   const opts=shuffle([c,...distract]);
   area.innerHTML=`${sessHead(mcSess,c)}
     ${autoChkHTML("mcAuto","autoMc","Wort automatisch vorlesen")}
     <div class="card pad center" style="margin:2px 0 8px;padding:12px 18px">
       <div class="muted" style="font-size:13px">${dir==="en2de"?"Was bedeutet:":"Wie heißt auf "+LNG.name+":"}</div>
-      <div class="word">${esc(c[askField])}</div>
+      <div class="word"${c.type==="situation"?' style="font-size:20px;line-height:1.35"':""}>${esc(c[askField])}</div>
       <div class="row center" style="justify-content:center;margin-top:6px">
         <button class="iconbtn spk" title="englisches Wort hören">🔊 Wort hören</button>
         ${dir==="en2de"?`<span class="pron">${esc(c.pron)}</span>`:""}
@@ -3174,7 +3531,7 @@ function renderMC(){
     byId("mcOpts").querySelectorAll(".mc-opt").forEach(b=>{b.disabled=true;if(b.dataset.id===c.id)b.classList.add("correct");else if(b===btn)b.classList.add("wrong");});
     answer(c.id,mcCorrect);
     if(ui.autoMc&&ttsAvailable()&&dir!=="en2de")speak(c.en,LNG.tts);
-    const fb=byId("mcFb");if(fb){if(mcCorrect){fb.className="feedback center ok";fb.textContent=pick(["Richtig! 🎉","Korrekt! 💪","Sehr gut!"]);}else{fb.className="feedback center bad";fb.innerHTML="Fast! Richtig: <b>"+esc(c[ansField])+"</b>";}}
+    const fb=byId("mcFb");if(fb){if(mcCorrect){fb.className="feedback center ok";fb.textContent=pick(["Richtig! 🎉","Korrekt! 💪","Sehr gut!"]);}else{fb.className="feedback center bad";fb.innerHTML="Fast! Richtig: <b>"+esc(c[ansField])+"</b>";}if(c.type==="situation"&&c.idiom&&c.lit)fb.innerHTML+='<div style="font-size:12px;margin-top:4px">💬 '+esc(c.lit)+"</div>";}
     byId("mcNext").style.display="flex";
   }));
   byId("mcNextBtn").addEventListener("click",()=>{sessAdvance(mcSess,c,mcCorrect);renderMC();});
@@ -3188,11 +3545,12 @@ function renderWrite(){
   if(!wrSess||wrSess.total===0){area.innerHTML=noCardsMsg();return;}
   if(sessFinished(wrSess)){area.innerHTML=sessionDone(wrSess.total);return;}
   const c=wrSess.list[wrSess.i];lastShownTs=Date.now();
+  const isSit=c.type==="situation";const _gw=isSit?clozeGapWord(c):null; // v66: Situations-Sätze als Lückentext
   area.innerHTML=`${sessHead(wrSess,c)}
     ${autoChkHTML("wrAuto","autoWrite","Lösung automatisch vorlesen")}
     <div class="card pad center" style="margin:6px 0 12px">
-      <div class="muted" style="font-size:13px">Schreibe auf ${LNG.name} (ohne „${LNG.artHint}"):</div>
-      <div class="word">${esc(c.de)}</div>
+      ${isSit?`<div class="muted" style="font-size:13px">Welches Wort fehlt? ${c.role==="P"?"🛎️ Personal sagt:":"🧳 Du sagst:"}${c.idiom?" 💬":""}</div>`:`<div class="muted" style="font-size:13px">Schreibe auf ${LNG.name} (ohne „${LNG.artHint}"):</div>`}
+      ${isSit?`<div class="word" style="font-size:21px;line-height:1.4">${clozeHTML(c,_gw)}</div><div class="muted" style="font-size:14px;margin-top:6px">🇩🇪 ${esc(c.de)}</div>`:`<div class="word">${esc(c.de)}</div>`}
       <div class="pron" id="wrPron" style="visibility:hidden">🔊 ${esc(c.pron)}</div>
     </div>
     <div class="center">
@@ -3216,11 +3574,12 @@ function renderWrite(){
   const wrA=byId("wrAuto");if(wrA)wrA.addEventListener("change",e=>{ui.autoWrite=e.target.checked;save(K.ui,ui);if(ui.autoWrite&&done)speak(c.en,LNG.tts);});
   function check(){
     if(done)return;done=true;
-    wasCorrect=answersOf(c).includes(normAns(inp.value));
+    wasCorrect=isSit?(normAns(inp.value)===normAns(_gw)):answersOf(c).includes(normAns(inp.value));
     answer(c.id,wasCorrect);
     const fb=byId("wrFb");
     if(wasCorrect){fb.className="feedback ok";fb.textContent=pick(["Perfekt! 🎉","Richtig geschrieben! 💪","Super!"]);}
-    else{fb.className="feedback bad";fb.innerHTML="Richtig: <b>"+esc(c.en)+"</b>";}
+    else{fb.className="feedback bad";fb.innerHTML="Richtig: <b>"+esc(isSit?_gw:c.en)+"</b>";}
+    if(isSit)fb.innerHTML+='<div class="muted" style="font-size:13px;margin-top:4px">'+esc(c.en)+(c.idiom&&c.lit?"<br>💬 "+esc(c.lit):"")+"</div>";
     if(ui.autoWrite&&ttsAvailable())speak(c.en,LNG.tts);
     inp.disabled=true;byId("wrCheck").disabled=true;byId("wrNext").style.display="flex";
   }
@@ -3232,6 +3591,7 @@ function renderWrite(){
 /* ============================ LISTENING (Sätze ODER Einzelwörter, mit Sprachausgabe) ============================ */
 function sentLen(){return ui.sentLen||"normal";}   // "kurz" | "normal" | "xlang" (v48)
 async function genSentence(card){
+  if(card.type==="situation")return {en:card.en,de:card.de,level:inputLevel(),fixed:true}; // v66: Situations-Sätze sind fertig – keine KI nötig
   const lvl=inputLevel();
   const hard=/^(B2|C1|C2)/.test(lvl);
   const ln=sentLen();
@@ -3255,7 +3615,7 @@ async function genSentence(card){
 }
 /* ---- Hör-Modus: Original-Sätze aus dem aktuellsten Transkript ---- */
 let trSent=load(K.trsent,{});           // Cache: normalisierter EN-Satz → deutsche Übersetzung (on-demand, optional)
-function latestScriptEntry(){const ks=Object.keys(scripts||{});let bk=null,bd="-";ks.forEach(k=>{const s=scripts[k];if(s&&String(s.lastLoaded||"")>=bd){bd=String(s.lastLoaded||"");bk=k;}});return bk?{path:bk,script:scripts[bk]}:null;}
+function latestScriptEntry(){const ks=Object.keys(scripts||{});let bk=null,bd="-";ks.forEach(k=>{const s=scripts[k];if(s&&!s.dup&&String(s.lastLoaded||"")>=bd){bd=String(s.lastLoaded||"");bk=k;}});return bk?{path:bk,script:scripts[bk]}:null;}
 function latestScript(){const e=latestScriptEntry();return e?e.script:null;}
 // Titel „YYYY-MM-DD Level Name" zerlegen → {date,level,name}; ohne Schema → name=ganzer Titel.
 function parseScriptTitle(t){
@@ -3266,7 +3626,7 @@ function parseScriptTitle(t){
 }
 // Das aktuell GEWÄHLTE Transkript (über ui.srcFilter), sonst das neueste – für Hören & Filter.
 function selectedScriptEntry(){
-  if(ui.srcFilter){const ks=Object.keys(scripts||{});for(let i=0;i<ks.length;i++){if(scripts[ks[i]]&&scripts[ks[i]].title===ui.srcFilter)return {path:ks[i],script:scripts[ks[i]]};}}
+  if(ui.srcFilter){const ks=Object.keys(scripts||{});for(let i=0;i<ks.length;i++){if(scripts[ks[i]]&&!scripts[ks[i]].dup&&scripts[ks[i]].title===ui.srcFilter)return {path:ks[i],script:scripts[ks[i]]};}}
   return latestScriptEntry();
 }
 function selectedScript(){const e=selectedScriptEntry();return e?e.script:null;}
@@ -3618,7 +3978,7 @@ function renderWeek(){
 
 /* ============================ DASHBOARD ============================ */
 let charts={};
-function renderDashboard(){
+function renderDashboard(){renderSitButtons();
   ensureProgress();
   if(typeof Chart!=="undefined"){const cs=getComputedStyle(document.body);Chart.defaults.color=cs.color;Chart.defaults.borderColor=(cs.getPropertyValue("--line")||"#ece6df").trim();}
   renderNow();renderQuests();renderWeek();
@@ -3956,6 +4316,38 @@ function loadChunks(){
   const el=byId("chunkStatus");if(el){el.style.color="var(--muted)";el.textContent=added?("✅ "+added+" Wendungen geladen – sie tauchen ab jetzt beim Üben auf (nach Thema einsortiert)."):"Wendungen sind bereits geladen. 👍";}
   if(added)toast(added+" Wendungen geladen! 🧩");
 }
+/* ===== SECTION: SITUATIONEN-UI (v66) – Laden + Schnellstart pro Situation ===== */
+function clozeGapWord(c){const g=(c.gap&&c.gap.length)?c.gap:[];if(g.length)return g[Math.floor(Math.random()*g.length)];const ws=String(c.en).replace(/[^A-Za-z\' -]/g," ").split(/\s+/).filter(function(w){return w.length>3;});ws.sort(function(a,b){return b.length-a.length;});return ws[0]||String(c.en);}
+function clozeHTML(c,gw){const re=new RegExp(String(gw).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"i");const marked=String(c.en).replace(re,"\u0001");return esc(marked).replace("\u0001",'<span style="color:var(--accent);border-bottom:2px solid var(--accent);padding:0 10px">____</span>');}
+function sitStats(key){const def=SIT_DEFS.find(function(d){return d.key===key;});if(!def)return {loaded:0,total:0,mastered:0};const cat=SIT_CAT_PREFIX+def.name;const have=allCards().filter(function(c){return c.sit===key||c.cat===cat;});return {loaded:have.length,total:(SIT_DECKS[key]||[]).length,mastered:have.filter(function(c){return isMastered(progress[c.id]);}).length};}
+function loadSituation(key){
+  const deck=SIT_DECKS[key]||[];
+  const existing=new Set(allCards().map(function(c){return norm2(c.en);}));
+  let added=0;
+  deck.forEach(function(o){const k=norm2(o.en);if(!k||existing.has(k))return;existing.add(k);userCards.push(Object.assign({},o));added++;});
+  if(added){save(K.user,userCards);ensureProgress();}
+  return added;
+}
+function practiceSituation(key){
+  const def=SIT_DEFS.find(function(d){return d.key===key;});if(!def)return;
+  const added=loadSituation(key);
+  boost=null;activeRun=false;ui.srcFilter=null;ui.cat=SIT_CAT_PREFIX+def.name;ui.scope="all";save(K.ui,ui);
+  refreshAllViews();
+  const el=byId("sitStatus");if(el){el.style.color="var(--muted)";el.textContent=added?("✅ "+added+" Karten „"+def.name+"“ geladen – Sätze in typischer Reihenfolge, 💬 = Redewendung."):("📍 "+def.name+" ist komplett geladen – weiter üben!");}
+  toast(added?("⬇️ "+added+" Karten – "+def.icon+" "+def.name+"!"):(def.icon+" "+def.name+" – los geht’s!"));
+  activate("flashcards");
+}
+function renderSitButtons(){
+  const el=byId("sitBtns"),card=byId("sitCard");if(!el)return;
+  const on=(CUR_LANG==="en"&&typeof SIT_DEFS!=="undefined"&&SIT_DEFS.length>0);
+  if(card)card.style.display=on?"":"none";
+  if(!on){el.innerHTML="";return;}
+  el.innerHTML=SIT_DEFS.map(function(d){const s=sitStats(d.key);
+    const sub=s.loaded?("✓ "+s.mastered+" / "+s.loaded+" gemeistert"):(s.total+" Karten laden");
+    return '<button class="btn ghost" data-sit="'+d.key+'" style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:126px">'+d.icon+" "+esc(d.name)+'<small style="font-weight:600;opacity:.75">'+sub+"</small></button>";
+  }).join("");
+  el.querySelectorAll("button[data-sit]").forEach(function(b){b.addEventListener("click",function(){practiceSituation(b.dataset.sit);});});
+}
 function scriptMsg(msg,isErr){const el=byId("scriptStatus");if(el){el.style.color=isErr?"var(--bad)":"var(--muted)";el.textContent=msg;}return undefined;}
 function scriptBusy(on,msg){const b=byId("btnNewScript");if(b)b.disabled=on;if(msg!==undefined){const el=byId("scriptStatus");if(el){el.style.color="var(--muted)";el.innerHTML=(on?'<span class="spinner"></span>':"")+esc(msg);}}}
 function refreshAllViews(){renderDashboard();buildFilterBar();renderManage();const a=document.querySelector("nav.tabs button.active");if(a&&PRACTICE.includes(a.dataset.tab))refreshActive();}
@@ -3968,10 +4360,23 @@ async function loadNewScript(){
     if(files.length===0)return scriptMsg("Keine Transkripte gefunden. Lege eines in "+LNG.obsRoot+"/_Transkripte/ ab. 📄");
     const fresh=files.filter(n=>!scripts[TRANSCRIPT_DIR+"/"+n]);
     if(fresh.length===0)return scriptMsg("Kein neues Transkript gefunden. Tipp: Mit „Neue Vokabeln laden“ holst du mehr aus den vorhandenen heraus. 👍");
-    const name=fresh[0]; let path=TRANSCRIPT_DIR+"/"+name, title=name.replace(/\.md$/i,"");
-    scriptBusy(true,"Lese „"+title+"“ …");
-    const text=await readTranscript(path);
-    if(!text||text.length<20)return scriptMsg("„"+title+"“ scheint leer zu sein.",true);
+    // v65: Kandidaten der Reihe nach prüfen — Duplikate (gleicher Kerntitel/Text wie ein schon verarbeitetes
+    // Transkript) als Tombstone markieren und überspringen, statt sie erneut zu verarbeiten.
+    let path=null,title=null,text=null;const skipped=[];
+    for(let fi=0;fi<fresh.length;fi++){
+      const cTitle=fresh[fi].replace(/\.md$/i,""),cPath=TRANSCRIPT_DIR+"/"+fresh[fi];
+      scriptBusy(true,"Lese „"+cTitle+"“ …");
+      const cText=await readTranscript(cPath);
+      if(!cText||cText.length<20){skipped.push("„"+cTitle+"“ (leer)");continue;}
+      const dup=findDupScript(cTitle,cText);
+      if(dup){
+        scripts[cPath]={title:cTitle,dup:true,of:dup.sc.title,words:[],lastLoaded:todayStr()};save(K.scripts,scripts);
+        skipped.push("„"+cTitle+"“ (Duplikat von „"+parseScriptTitle(dup.sc.title).name+"“, schon am "+(dup.sc.lastLoaded||"?")+" verarbeitet)");
+        continue;
+      }
+      path=cPath;title=cTitle;text=cText;break;
+    }
+    if(!path)return scriptMsg("Kein wirklich neues Transkript — übersprungen: "+skipped.join("; ")+". 👍");
     // --- Auto-Umbenennen „YYYY-MM-DD Level Titel" VOR dem Verarbeiten (sonst entstehen Doppel-Einträge) ---
     if(!isRenamedName(title)){
       scriptBusy(true,"Erkenne Level & Titel …");
@@ -3990,8 +4395,9 @@ async function loadNewScript(){
     const added=addVocab(vocab,title);
     scripts[path]={title:title,level:sanitizeLevel(title),words:allW,lastLoaded:todayStr(),fulltext:String(text||"").slice(0,16000)};save(K.scripts,scripts);
     refreshAllViews();
-    const rem=fresh.length-1;
-    if(added.length)scriptMsg("✅ „"+title+"“ geladen: "+added.length+" neue Vokabeln übersetzt – alle "+allW.length+" Wörter des Transkripts sind jetzt im Transkript-Filter übbar."+(rem>0?(" Noch "+rem+" Transkript"+(rem===1?"":"e")+" wartet."):""));
+    const rem=fresh.length-1-skipped.length;
+    const skipInfo=skipped.length?(" Übersprungen: "+skipped.join("; ")+"."):"";
+    if(added.length)scriptMsg("✅ „"+title+"“ geladen: "+added.length+" neue Vokabeln übersetzt – alle "+allW.length+" Wörter des Transkripts sind jetzt im Transkript-Filter übbar."+(rem>0?(" Noch "+rem+" Transkript"+(rem===1?"":"e")+" wartet."):"")+skipInfo);
     else if(unknownN>0)scriptMsg("„"+title+"“ geladen, aber die Übersetzung der "+unknownN+" neuen Wörter hat nicht geklappt. Klick im Dashboard bei diesem Transkript auf „✚ Wörter“ – dann hole ich sie blockweise nach.",true);
     else scriptMsg("„"+title+"“ verarbeitet – alle "+allW.length+" Wörter waren schon in deinem Stapel und sind im Transkript-Filter übbar. 👍");
     if(added.length)toast(added.length+" neue Vokabeln! 🎉");
@@ -4008,6 +4414,7 @@ async function loadMoreVocab(){
   try{
     let total=0,fromTitle="";
     for(const path of paths){
+      if(!scripts[path]||scripts[path].dup)continue;            // v65: Duplikat-Tombstones überspringen
       const text=await readTranscript(path);if(!text)continue;
       const vocab=await extractAllWords(text,allCards().map(c=>norm2(c.en)));  // alle noch fehlenden Wörter dieses Transkripts übersetzen
       const added=addVocab(vocab,scripts[path].title);
@@ -4032,6 +4439,49 @@ function isRenamedName(base){return TR_SCHEME.test(String(base||""));}
 function sanitizeLevel(s){const m=String(s||"").toUpperCase().match(/\b(A0|A1|A2|B1|B2|C1|C2)(\.[1-3])?\b/);return m?(m[1]+(m[2]||"")):"";}
 function sanitizeTitle(s){return String(s||"").replace(/[\\\/:*?"<>|#^\[\]]/g," ").replace(/\s+/g," ").trim().slice(0,60).trim();}
 function uniqueBase(base,taken){let n=base,k=2;while(taken&&taken.has(n.toLowerCase())){n=base+" ("+(k++)+")";}return n;}
+/* v65: Duplikat-Erkennung — verhindert, dass dasselbe Transkript unter neuem Dateinamen erneut verarbeitet wird
+   (passiert z. B., wenn iCloud die alte Roh-Datei nach dem Auto-Umbenennen wiederherstellt). */
+function coreTitle(t){return String(t||"").replace(TR_SCHEME,"").trim().toLowerCase();}
+function normText(t){return String(t||"").toLowerCase().replace(/\s+/g," ").trim();}
+// Sucht ein bereits verarbeitetes Transkript mit gleichem Kerntitel ODER identischem Text → {path,sc} oder null.
+function findDupScript(title,text){
+  const ct=coreTitle(title),nt=normText(text);
+  const ks=Object.keys(scripts||{});
+  for(let i=0;i<ks.length;i++){
+    const sc=scripts[ks[i]];if(!sc||sc.dup)continue;
+    if(ct&&coreTitle(sc.title)===ct)return {path:ks[i],sc:sc};
+    if(nt&&sc.fulltext&&normText(sc.fulltext)===nt)return {path:ks[i],sc:sc};
+  }
+  return null;
+}
+// Einmalige Bereinigung (v65): doppelt verarbeitete Transkripte (gleicher Kerntitel, identischer/fehlender Text)
+// zusammenführen — neuester Eintrag bleibt (Datei existiert i. d. R. noch), Karten-Quellen werden umgehängt,
+// alte Einträge bleiben als dup-Tombstone (überleben so jeden Backup-Merge, ohne wieder aufzutauchen).
+function dedupeScripts(){
+  if(ui.dedupV65)return;
+  const groups={};
+  Object.keys(scripts||{}).forEach(p=>{const sc=scripts[p];if(!sc||sc.dup)return;const ct=coreTitle(sc.title);if(!ct)return;(groups[ct]=groups[ct]||[]).push(p);});
+  let changed=false;
+  Object.keys(groups).forEach(ct=>{
+    const g=groups[ct];if(g.length<2)return;
+    const texts=g.map(p=>normText((scripts[p]||{}).fulltext||""));
+    const ref=texts.find(t=>t);
+    if(texts.some(t=>t&&ref&&t!==ref))return;                       // wirklich verschiedene Texte → nicht anfassen
+    g.sort((a,b)=>String((scripts[b]||{}).lastLoaded||"").localeCompare(String((scripts[a]||{}).lastLoaded||""))); // neuestes zuerst
+    const keep=scripts[g[0]];
+    for(let i=1;i<g.length;i++){
+      const old=scripts[g[i]];
+      keep.words=Array.from(new Set((keep.words||[]).concat(old.words||[])));
+      if(!keep.fulltext&&old.fulltext)keep.fulltext=old.fulltext;
+      userCards.forEach(c=>{if(c&&c.source===old.title)c.source=keep.title;});
+      if(ui.srcFilter===old.title)ui.srcFilter=keep.title;
+      scripts[g[i]]={title:old.title,dup:true,of:keep.title,words:[],lastLoaded:todayStr()};
+      changed=true;
+    }
+  });
+  ui.dedupV65=true;save(K.ui,ui);
+  if(changed){save(K.scripts,scripts);save(K.user,userCards);toast("🧹 Doppelte Transkripte zusammengeführt.");}
+}
 async function detectLevel(text){
   if(!aiReady())return "";
   try{
@@ -4112,7 +4562,7 @@ async function completeTranscriptVocab(title){
   if(!cwReady())return migMsg("ℹ️ Geht nur im Artefakt in der Cowork-Seitenleiste.",true);
   if(!aiReady())return migMsg("ℹ️ Die KI-Extraktion ist hier nicht verfuegbar.",true);
   let path=null,sc=null;const ks=Object.keys(scripts||{});
-  for(let i=0;i<ks.length;i++){if(scripts[ks[i]]&&scripts[ks[i]].title===title){path=ks[i];sc=scripts[ks[i]];break;}}
+  for(let i=0;i<ks.length;i++){if(scripts[ks[i]]&&!scripts[ks[i]].dup&&scripts[ks[i]].title===title){path=ks[i];sc=scripts[ks[i]];break;}}
   if(!path||!sc)return migMsg("Transkript nicht gefunden – bitte zuerst laden.",true);
   const nm=parseScriptTitle(title).name;
   migMsg("⏳ Ergänze fehlende Wörter aus „"+nm+"“ …");
@@ -4140,7 +4590,7 @@ async function completeAllTranscripts(){
     if(!ks.length){migMsg("Noch keine Transkripte geladen.");return;}
     let totalAdded=0,done=0,failStreak=0,aborted=false;
     for(let i=0;i<ks.length;i++){
-      const path=ks[i],sc=scripts[path];if(!sc)continue;
+      const path=ks[i],sc=scripts[path];if(!sc||sc.dup)continue;
       const nm=parseScriptTitle(sc.title).name,head="("+(i+1)+"/"+ks.length+") „"+nm+"“";
       migMsg("⏳ Vervollständige "+head+" …  (bisher "+totalAdded+" Wörter)");
       let text=sc.fulltext;
@@ -5308,7 +5758,7 @@ const _tb=byId("themeBtn");if(_tb)_tb.addEventListener("click",()=>{
   try{if(document.querySelector("nav.tabs button.active").dataset.tab==="dashboard")renderDashboard();}catch(e){}  // Diagramm-Farben anpassen
 });
 applyTheme();
-ensureProgress();buildFilterBar();syncLevel(false);migrateTests();renderDashboard();
+ensureProgress();dedupeScripts();buildFilterBar();syncLevel(false);migrateTests();renderDashboard();
 if(!cwReady()){
   document.body.classList.add("no-cw"); // v54: Artefakt-only-Elemente ausblenden (Chat/Immersion-Tabs, Script-Loader, Obsidian-Karte, KI-Knöpfe)
   if(location.protocol!=="https:")scriptMsg("ℹ️ Tipp: Öffne dieses Artefakt in der Cowork-Seitenleiste, dann kannst du Transkripte automatisch laden."); // Hinweis nur in der Datei-Kopie, nicht in der Web-App
